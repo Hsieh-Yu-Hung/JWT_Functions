@@ -68,6 +68,10 @@ coverage.xml
 .env.test.local
 .env.production.local
 
+# Function Compute configuration files
+config/fc-config.json
+temp_update_body.json
+
 # IDE
 .vscode/
 .idea/

@@ -2,9 +2,10 @@
 
 ## 🆕 最新更新
 
-本專案已整合 [jwt-auth-middleware](https://github.com/your-username/jwt-auth-middleware) 套件，提供更強大和標準化的 JWT 認證功能。
+本專案已整合 [jwt-auth-middleware](https://github.com/Hsieh-Yu-Hung/JWT_Midware) 套件，提供更強大和標準化的 JWT 認證功能。
 
 ### 主要改進：
+
 - ✅ 使用標準化的 JWT Auth Middleware 套件
 - ✅ 自動 Token 黑名單管理
 - ✅ 內建 Token 清理機制
@@ -53,8 +54,8 @@ JWT_Authentication/
 
 - **JWTManager**: 核心 JWT 管理類別，提供 Token 建立、驗證、撤銷功能
 - **token_required**: 裝飾器，用於保護需要認證的端點
-- **自動黑名單管理**: 內建 Token 黑名單功能，支援自動清理
-- **多演算法支援**: 支援 HS256、HS384、HS512 等 JWT 演算法
+- **自動黑名單管理**: 內建 Token 黑名單功能
+- **多演算法支援**: 支援 HS256演算法
 - **管理端點**: 提供 `/admin/jwt/*` 系列管理端點
 
 ### 📦 Core 模組
@@ -145,10 +146,6 @@ JWT_Authentication/
 > - **未來所有訪問都將使用內網地址**
 > - 請確保您的應用程式配置為使用內網地址進行生產環境部署
 
-### 本地開發環境
-
-- **本地地址**: http://localhost:5000
-
 ## 🛠️ 安裝與啟動
 
 ### 1. 安裝依賴
@@ -161,64 +158,36 @@ pip install -r requirements.txt
 
 ### 2. 設定環境變數
 
-複製環境變數範例檔案：
-
-```bash
-cp env.example .env
-```
-
 編輯 `.env` 檔案，填入實際的配置值：
 
 ```bash
+# MongoDB 登入
+DB_ACCOUNT="資料庫帳戶"
+DB_PASSWORD="資料庫密碼"
+DB_URI="資料庫URI"
+DB_NAME="資料庫名稱"
+
+# 映像存放倉庫
+ACR_USERNAME="ACR帳戶"
+ACR_PASSWORD="ACR密碼"
+
+
 # JWT 設定
-JWT_SECRET_KEY=your-super-secret-jwt-key-change-this-in-production
-JWT_ALGORITHM=HS256
-JWT_EXPIRE_HOURS=24
-
-# 資料庫設定
-MONGODB_URI=mongodb://localhost:27017/jwt_auth_db
-MONGODB_DATABASE=jwt_auth_db
-
-# 應用程式設定
-FLASK_ENV=development
-FLASK_DEBUG=True
-PORT=9000
-
-# 安全設定
-CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+JWT_SECRET_KEY="請生成JWT密碼或是繼承自此專案的"
 ```
 
 ### 3. 啟動服務
 
-#### 快速啟動（推薦）
-
-**Linux/macOS:**
 ```bash
-chmod +x quick_start.sh
-./quick_start.sh
-```
-
-**Windows:**
-```cmd
-quick_start.bat
-```
-
-#### 手動啟動
-
-```bash
-# 本地開發
-python app.py
-
-# Docker 部署
-docker build -t jwt-auth .
-docker run -p 9000:9000 jwt-auth
+# Docker 部署到 Function Compute (自動化腳本)
+bash deploy.sh
 ```
 
 ### 4. 測試 JWT Auth Middleware 套件
 
 ```bash
 # 確保服務正在運行
-python test_jwt_middleware.py
+python tests/test_jwt_middleware.py
 ```
 
 ## 🚀 完整使用流程
@@ -351,21 +320,21 @@ curl -X POST https://jwt-autunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/logout
 
 ### 使用者端點
 
-- `POST /auth/register` - 使用者註冊
-- `POST /auth/login` - 使用者登入
-- `POST /auth/logout` - 使用者登出
-- `POST /auth/switch-account` - 帳戶切換
-- `GET /auth/profile` - 取得個人資料
-- `PUT /auth/profile` - 更新個人資料
-- `POST /auth/change-password` - 變更密碼
+- `POST /register` - 使用者註冊
+- `POST /login` - 使用者登入
+- `POST /logout` - 使用者登出
+- `POST /switch-account` - 帳戶切換
+- `GET /profile` - 取得個人資料
+- `PUT /profile` - 更新個人資料
+- `POST /change-password` - 變更密碼
 
 ### 管理員端點
 
-- `POST /auth/admin/cleanup-tokens` - 清理過期 token
-- `GET /auth/admin/blacklist-stats` - 黑名單統計
-- `GET /auth/admin/users` - 取得所有活躍使用者
-- `PUT /auth/admin/users/<user_id>/roles` - 更新使用者角色
-- `POST /auth/admin/users/<email>/deactivate` - 停用使用者
+- `POST /admin/cleanup-tokens` - 清理過期 token
+- `GET /admin/blacklist-stats` - 黑名單統計
+- `GET /admin/users` - 取得所有活躍使用者
+- `PUT /admin/users/<user_id>/roles` - 更新使用者角色
+- `POST /admin/users/<email>/deactivate` - 停用使用者
 
 ### 受保護端點
 
@@ -628,29 +597,150 @@ pip install -r requirements.txt
 - 安全組
 - MongoDB 實例（阿里雲 MongoDB 或自建）
 
-## 🔧 配置調整
+## 🔧 配置管理
 
-### 1. 更新 template.yml
+### 1. 配置檔案結構
 
-```yaml
-VpcConfig:
-  VpcId: vpc-xxx        # 您的 VPC ID
-  VSwitchIds:
-    - vsw-xxx          # 您的 VSwitch ID
-  SecurityGroupId: sg-xxx  # 您的安全組 ID
+本專案使用 JSON 配置檔案管理 Function Compute 部署設定：
+
+```
+config/
+├── fc-config.json          # 實際配置檔案
+└── fc-config.example.json  # 配置檔案範例
 ```
 
-### 2. 設定環境變數
+### 2. 設定配置檔案
 
-在 `template.yml` 中更新環境變數：
+複製範例配置檔案並修改：
 
-```yaml
-EnvironmentVariables:
-  SECRET_KEY: 'your-secret-key-here'
-  DB_ACCOUNT: 'your_mongodb_username'
-  DB_PASSWORD: 'your_mongodb_password'
-  DB_URI: 'your-mongodb-host:port'
-  DB_NAME: 'your_database_name'
+```bash
+cp config/fc-config.example.json config/fc-config.json
+```
+
+編輯 `config/fc-config.json`，填入您的實際配置：
+
+```json
+{
+  "function": {
+    "name": "jwt-auth-functions",
+    "runtime": "custom-container",
+    "handler": "index.handler",
+    "timeout": 60,
+    "memorySize": 4096
+  },
+  "acr": {
+    "domain": "your-acr-domain.your-region.personal.cr.aliyuncs.com",
+    "namespace": "your-namespace",
+    "imageName": "jwt-functions",
+    "imageVersion": "latest"
+  },
+  "region": "cn-shanghai"
+}
+```
+
+### 3. 配置檔案說明
+
+#### function 區段
+
+- `name`: 函數名稱
+- `runtime`: 運行時（custom-container）
+- `handler`: 處理器
+- `timeout`: 超時時間（秒）
+- `memorySize`: 記憶體大小（MB）
+- `cpu`: CPU 核心數
+- `diskSize`: 磁碟大小（MB）
+
+#### container 區段
+
+- `image`: 容器映像檔完整路徑
+- `port`: 容器端口
+- `command`: 啟動命令（可選）
+- `entrypoint`: 進入點（可選）
+
+#### vpc 區段
+
+- `vpcId`: VPC ID
+- `vSwitchIds`: VSwitch ID 列表
+- `securityGroupId`: 安全組 ID
+
+#### acr 區段
+
+- `domain`: ACR 域名
+- `namespace`: 命名空間
+- `imageName`: 映像檔名稱
+- `imageVersion`: 映像檔版本
+
+## 🚀 部署流程
+
+### 1. 使用新的部署工具（推薦）
+
+```bash
+# 完整部署
+./scripts/deploy.sh
+
+# 跳過 Docker 建構
+./scripts/deploy.sh --skip-build
+
+# 驗證配置檔案
+./scripts/deploy.sh --validate
+
+# 顯示部署狀態
+./scripts/deploy.sh --status
+
+# 模擬執行
+./scripts/deploy.sh --dry-run
+```
+
+### 2. 直接使用 Python 腳本
+
+```bash
+# 完整部署
+python3 scripts/deploy.py
+
+# 使用自訂配置檔案
+python3 scripts/deploy.py --config config/my-config.json
+
+# 跳過建構
+python3 scripts/deploy.py --skip-build
+```
+
+### 3. 部署流程說明
+
+1. **驗證配置** - 檢查配置檔案格式和必要欄位
+2. **檢查環境** - 驗證必要工具和環境變數
+3. **登入 ACR** - 使用認證資訊登入容器倉庫
+4. **建構映像檔** - 執行 Docker build
+5. **標籤映像檔** - 為映像檔打上 ACR 標籤
+6. **推送映像檔** - 將映像檔推送到 ACR
+7. **更新函數** - 更新 Function Compute 服務
+
+## 🔧 配置調整
+
+### 1. 環境變數設定
+
+確保 `.env` 檔案包含必要的認證資訊：
+
+```bash
+# ACR 認證
+ACR_USERNAME="your-acr-username"
+ACR_PASSWORD="your-acr-password"
+
+# MongoDB 連接
+DB_ACCOUNT="your_mongodb_username"
+DB_PASSWORD="your_mongodb_password"
+DB_URI="your-mongodb-host:port"
+DB_NAME="your_database_name"
+
+# JWT 設定
+JWT_SECRET_KEY="your-secret-key-here"
+```
+
+### 2. 驗證配置
+
+在部署前驗證配置檔案：
+
+```bash
+./scripts/deploy.sh --validate
 ```
 
 ## 🚀 部署步驟
@@ -658,8 +748,11 @@ EnvironmentVariables:
 ### 1. 執行部署腳本
 
 ```bash
-chmod +x deploy_to_fc.sh
-./deploy_to_fc.sh
+# 設定執行權限
+chmod +x scripts/deploy.sh
+
+# 完整部署
+./scripts/deploy.sh
 ```
 
 ### 2. 手動部署（可選）
@@ -689,37 +782,60 @@ fun deploy --template template.yml
 
 ### 認證端點
 
-- `POST /auth/register` - 使用者註冊
-- `POST /auth/login` - 使用者登入
-- `POST /auth/logout` - 使用者登出
-- `GET /auth/profile` - 取得個人資料
-- `PUT /auth/profile` - 更新個人資料
-- `POST /auth/change-password` - 變更密碼
-- `POST /auth/switch-account` - 帳戶切換
+- `POST /register` - 使用者註冊
+- `POST /login` - 使用者登入
+- `POST /logout` - 使用者登出
+- `GET /profile` - 取得個人資料
+- `PUT /profile` - 更新個人資料
+- `POST /change-password` - 變更密碼
+- `POST /switch-account` - 帳戶切換
 
 ### 管理員端點
 
-- `POST /auth/admin/cleanup-tokens` - 清理過期 token
-- `GET /auth/admin/blacklist-stats` - 黑名單統計
-- `GET /auth/admin/users` - 取得所有使用者
-- `PUT /auth/admin/users/{user_id}/roles` - 更新使用者角色
-- `POST /auth/admin/users/{email}/deactivate` - 停用使用者
+- `POST /admin/cleanup-tokens` - 清理過期 token
+- `GET /admin/blacklist-stats` - 黑名單統計
+- `GET /admin/users` - 取得所有使用者
+- `PUT /admin/users/{user_id}/roles` - 更新使用者角色
+- `POST /admin/users/{email}/deactivate` - 停用使用者
 
 ## 🔧 配置選項
 
 ### Function Compute 配置
 
-```yaml
-Runtime: python3.9      # Python 運行時
-Timeout: 30             # 超時時間（秒）
-MemorySize: 512         # 記憶體大小（MB）
+在 `config/fc-config.json` 中調整以下設定：
+
+```json
+{
+  "function": {
+    "timeout": 60,           // 超時時間（秒）
+    "memorySize": 4096,      // 記憶體大小（MB）
+    "cpu": 4,               // CPU 核心數
+    "diskSize": 512,        // 磁碟大小（MB）
+    "instanceConcurrency": 10  // 實例並發數
+  }
+}
 ```
 
 ### 網路配置
 
-- **VPC 配置**: 確保 Function Compute 可以訪問 MongoDB
-- **安全組**: 開放必要的端口
+- **VPC 配置**: 在 `vpc` 區段設定 VPC ID、VSwitch ID 和安全組
+- **容器配置**: 在 `container` 區段設定端口和啟動參數
 - **CORS**: 支援跨域請求
+
+### 日誌配置
+
+在 `log` 區段設定日誌相關配置：
+
+```json
+{
+  "log": {
+    "project": "your-log-project",
+    "logstore": "default-logs",
+    "enableRequestMetrics": true,
+    "enableInstanceMetrics": true
+  }
+}
+```
 
 ## 📊 監控和日誌
 
@@ -727,10 +843,13 @@ MemorySize: 512         # 記憶體大小（MB）
 
 ```bash
 # 查看函數日誌
-fun logs jwt-auth-service/jwt-auth-function
+aliyun fc GetFunctionLogs --region cn-shanghai --functionName jwt-auth-functions
 
 # 查看實時日誌
-fun logs jwt-auth-service/jwt-auth-function --tail
+aliyun fc GetFunctionLogs --region cn-shanghai --functionName jwt-auth-functions --tail
+
+# 使用配置檔案中的函數名稱
+aliyun fc GetFunctionLogs --region $(jq -r '.region' config/fc-config.json) --functionName $(jq -r '.function.name' config/fc-config.json)
 ```
 
 ### 2. 監控指標
@@ -766,10 +885,16 @@ fun logs jwt-auth-service/jwt-auth-function --tail
 
 ```bash
 # 檢查認證
-fun config list
+aliyun configure list
 
-# 檢查模板語法
-fun validate --template template.yml
+# 驗證配置檔案
+./scripts/deploy.sh --validate
+
+# 檢查環境變數
+cat .env | grep -E "(ACR_USERNAME|ACR_PASSWORD)"
+
+# 檢查配置檔案格式
+python3 -m json.tool config/fc-config.json
 ```
 
 ### 2. 連接失敗
@@ -782,10 +907,13 @@ fun validate --template template.yml
 
 ```bash
 # 查看錯誤日誌
-fun logs jwt-auth-service/jwt-auth-function --tail
+aliyun fc GetFunctionLogs --region cn-shanghai --functionName jwt-auth-functions --tail
 
 # 本地測試
 python function_compute_adapter.py
+
+# 檢查函數狀態
+aliyun fc GetFunction --region cn-shanghai --functionName jwt-auth-functions
 ```
 
 ## 💰 成本優化
@@ -812,14 +940,23 @@ python function_compute_adapter.py
 
 ```bash
 # 修改程式碼後重新部署
-./deploy_to_fc.sh
+./scripts/deploy.sh
+
+# 僅更新函數配置（跳過 Docker 建構）
+./scripts/deploy.sh --skip-build
 ```
 
 ### 2. 更新配置
 
 ```bash
-# 更新環境變數
-fun deploy --template template.yml
+# 編輯配置檔案
+vim config/fc-config.json
+
+# 驗證配置
+./scripts/deploy.sh --validate
+
+# 重新部署
+./scripts/deploy.sh
 ```
 
 ## 📈 擴展建議
@@ -841,11 +978,14 @@ fun deploy --template template.yml
 
 ## 🎯 最佳實踐
 
-1. **環境變數管理**: 使用阿里雲 KMS 加密敏感資訊
-2. **日誌管理**: 配置結構化日誌
-3. **錯誤處理**: 實作完整的錯誤處理機制
-4. **測試**: 建立完整的測試套件
-5. **備份**: 定期備份重要資料
+1. **配置管理**: 使用 JSON 配置檔案管理部署設定
+2. **環境變數管理**: 使用阿里雲 KMS 加密敏感資訊
+3. **日誌管理**: 配置結構化日誌
+4. **錯誤處理**: 實作完整的錯誤處理機制
+5. **測試**: 建立完整的測試套件
+6. **備份**: 定期備份重要資料
+7. **版本控制**: 使用語義化版本號管理映像檔
+8. **部署驗證**: 部署前驗證配置檔案格式
 
 ## 📞 支援
 
@@ -855,7 +995,5 @@ fun deploy --template template.yml
 2. 專案日誌
 3. 網路連接狀態
 4. 環境變數設定
-
----
-
-這個部署方案讓您的 JWT 認證系統可以在無伺服器環境中穩定運行！
+5. 配置檔案格式
+6. 部署腳本說明：`cat scripts/README.md`

@@ -1,0 +1,50 @@
+{
+  "function": {
+    "name": "jwt-auth-functions",
+    "description": "JWT Authentication Service for Function Compute",
+    "runtime": "custom-container",
+    "handler": "index.handler",
+    "timeout": 60,
+    "memorySize": 4096,
+    "cpu": 4,
+    "diskSize": 512,
+    "instanceConcurrency": 10,
+    "internetAccess": true,
+    "enableLongLiving": false
+  },
+  "container": {
+    "image": "your-acr-domain.your-region.personal.cr.aliyuncs.com/your-namespace/your-image:latest",
+    "port": 9000,
+    "command": null,
+    "entrypoint": null
+  },
+  "vpc": {
+    "vpcId": "vpc-xxxxxxxxx",
+    "vSwitchIds": [
+      "vsw-xxxxxxxxx",
+      "vsw-xxxxxxxxx"
+    ],
+    "securityGroupId": "sg-xxxxxxxxx",
+    "role": null
+  },
+  "log": {
+    "project": "your-log-project",
+    "logstore": "default-logs",
+    "enableRequestMetrics": true,
+    "enableInstanceMetrics": true,
+    "enableCustomExtraLog": true,
+    "logBeginRule": "DefaultRegex"
+  },
+  "acr": {
+    "domain": "your-acr-domain.your-region.personal.cr.aliyuncs.com",
+    "namespace": "your-namespace",
+    "imageName": "your-image-name",
+    "imageVersion": "latest"
+  },
+  "region": "cn-shanghai",
+  "resourceGroupId": "rg-xxxxxxxxx",
+  "environmentVariables": {
+    "PYTHONPATH": "/var/task",
+    "FLASK_ENV": "production"
+  }
+} 
