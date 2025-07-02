@@ -39,7 +39,6 @@ JWT_Authentication/
 │   └── auth_routes.py           # 認證路由（已整合新套件）
 ├── utils/                        # 工具模組
 │   ├── __init__.py              # 模組初始化
-│   ├── token_cleanup_scheduler.py # Token 清理排程器（已整合新套件）
 │   └── token_cleaner/           # JWT Token 清理 Function
 │       ├── __init__.py          # 模組初始化
 │       ├── cleanup_function.py  # 主要清理邏輯
@@ -84,7 +83,6 @@ JWT_Authentication/
 
 ### 🛠️ Utils 模組
 
-- **token_cleanup_scheduler.py**: Token 清理排程器（已整合 jwt-auth-middleware 套件）
 - **token_cleaner/**: JWT Token 清理 Function（適用於 Function Compute 環境）
   - **cleanup_function.py**: 主要清理邏輯
   - **deploy_container.py**: Python 容器化部署腳本
@@ -610,8 +608,6 @@ app.py
 │   └── database.role_model
 ├── middleware.jwt_middleware
 │   └── core.jwt_utils
-├── utils.token_cleanup_scheduler
-│   └── core.jwt_utils
 └── database.database
     └── core.config
 ```
@@ -648,7 +644,8 @@ app.py
 
 ## 📊 監控與維護
 
-- 自動 token 清理機制
+- 手動 token 清理端點 (`/admin/jwt/cleanup`)
+- 獨立的 token 清理 Function (`utils/token_cleaner/`)
 - 資料庫連接狀態監控
 - 完整的統計資訊端點
 - 管理員功能支援

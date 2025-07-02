@@ -1,12 +1,10 @@
 from flask import Flask, request, jsonify
-from jwt_auth_middleware import JWTManager, token_required, verify_token
+from jwt_auth_middleware import JWTManager, token_required
 from routes.auth_routes import auth_bp
-from utils.token_cleanup_scheduler import start_cleanup_scheduler, stop_cleanup_scheduler
 from database.database import db_manager
 import json
 from datetime import datetime
 from flask_cors import CORS
-import os
 
 app = Flask(__name__)
 app.register_blueprint(auth_bp)
@@ -225,19 +223,13 @@ app.config['JSON_AS_ASCII'] = False
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
 if __name__ == '__main__':
-    # 啟動 token 清理排程器（每小時清理一次）
-    # start_cleanup_scheduler()
-    
     try:
         print("🚀 啟動 JWT 認證服務...")
         print("🔐 JWT Auth Middleware 已啟用")
-        # print("📊 Token 清理排程器已啟動（每小時清理一次）")
         app.run(host='0.0.0.0', port=9000)
     except KeyboardInterrupt:
         print("\n🛑 正在停止服務...")
     finally:
-        # 停止清理排程器
-        # stop_cleanup_scheduler()
         # 關閉資料庫連接
         db_manager.close()
         print("✅ 服務已停止")
