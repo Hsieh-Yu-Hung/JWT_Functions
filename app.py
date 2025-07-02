@@ -62,16 +62,13 @@ def admin_stats(current_user):
     if 'admin' not in current_user.get('roles', []):
         return {"error": "Admin access required"}, 403
     
-    from core.jwt_utils import get_blacklist_stats
     from database.role_model import RoleModel
     
     role_model = RoleModel()
-    blacklist_stats = get_blacklist_stats()
     active_users = role_model.get_all_active_users()
     
     return {
         "system_stats": {
-            "blacklist": blacklist_stats,
             "active_users_count": len(active_users),
             "total_users": len(active_users)
         },
@@ -90,9 +87,9 @@ def get_blacklist(current_user):
         return {"error": "Admin access required"}, 403
     
     try:
-        stats = jwt_manager.get_blacklist_stats()
         return jsonify({
-            "blacklist_stats": stats,
+            "message": "Blacklist stats not available in current version",
+            "note": "JWT tokens are validated by signature and expiration time",
             "timestamp": datetime.now().isoformat()
         })
     except Exception as e:
@@ -111,8 +108,9 @@ def add_to_blacklist(current_user):
         if not token:
             return jsonify({"error": "Token is required"}), 400
         
-        jwt_manager.blacklist_token(token)
-        return jsonify({"message": "Token added to blacklist"})
+        from jwt_auth_middleware import revoke_token
+        revoke_token(token)
+        return jsonify({"message": "Token revoked successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -124,9 +122,9 @@ def cleanup_expired_tokens(current_user):
         return {"error": "Admin access required"}, 403
     
     try:
-        count = jwt_manager.cleanup_expired_tokens()
         return jsonify({
-            "message": f"Cleaned up {count} expired tokens",
+            "message": "Token cleanup not required in current version",
+            "note": "Expired tokens automatically become invalid",
             "timestamp": datetime.now().isoformat()
         })
     except Exception as e:

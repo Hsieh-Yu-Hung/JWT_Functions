@@ -1,26 +1,11 @@
 from flask import Blueprint, request, jsonify, current_app
-from jwt_auth_middleware import JWTManager, verify_token
+from jwt_auth_middleware import verify_token, create_access_token, revoke_token
 from database.role_model import RoleModel
 from database.user_model import UserModel
-import os
 
 auth_bp = Blueprint('auth', __name__)
 role_model = RoleModel()
 user_model = UserModel()
-
-# 初始化 JWT Manager（如果還沒有初始化）
-def get_jwt_manager():
-    """獲取 JWT Manager 實例"""
-    if not hasattr(current_app, 'jwt_manager'):
-        jwt_manager = JWTManager(
-            secret_key=os.environ['JWT_SECRET_KEY'],
-            algorithm='HS256',
-            token_expire_hours=24,
-            blacklist_enabled=True
-        )
-        jwt_manager.init_app(current_app)
-        current_app.jwt_manager = jwt_manager
-    return current_app.jwt_manager
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -99,9 +84,8 @@ def login():
     # 確保使用者角色存在
     role_model.ensure_user_role_exists(email, email)
     
-    # 使用新的 JWT Manager 建立 token
-    jwt_manager = get_jwt_manager()
-    token = jwt_manager.create_token(token_data)
+    # 使用 create_access_token 函數建立 token
+    token = create_access_token(token_data)
     
     return jsonify({
         "access_token": token,
@@ -125,9 +109,8 @@ def logout():
     
     token = auth_header.split(" ")[1]
     
-    # 使用新的 JWT Manager 撤銷 token
-    jwt_manager = get_jwt_manager()
-    jwt_manager.blacklist_token(token)
+    # 使用 revoke_token 函數撤銷 token
+    revoke_token(token)
     
     return jsonify({
         "message": "Logout successful",
@@ -167,9 +150,8 @@ def switch_account():
     # 確保使用者角色存在
     role_model.ensure_user_role_exists(email, email)
     
-    # 使用新的 JWT Manager 建立 token
-    jwt_manager = get_jwt_manager()
-    new_token = jwt_manager.create_token(token_data)
+    # 使用 create_access_token 函數建立 token
+    new_token = create_access_token(token_data)
     
     return jsonify({
         "message": "Account switched successfully",
@@ -196,9 +178,8 @@ def get_profile():
         
         token = auth_header.split(" ")[1]
         
-        # 使用新的 JWT Manager 驗證 token
-        jwt_manager = get_jwt_manager()
-        payload = jwt_manager.verify_token(token)
+        # 使用 verify_token 函數驗證 token
+        payload = verify_token(token)
         
         # 從 token 中取得使用者 email
         email = payload.get("email")
@@ -331,13 +312,11 @@ def cleanup_tokens():
     管理員端點：清理過期的 token
     """
     try:
-        # 使用新的 JWT Manager 清理過期 token
-        jwt_manager = get_jwt_manager()
-        count = jwt_manager.cleanup_expired_tokens()
-        
+        # 注意：新版本的 JWT Manager 不支援自動清理功能
+        # 過期的 token 會自動失效，無需手動清理
         return jsonify({
-            "message": f"Successfully cleaned up {count} expired tokens",
-            "cleaned_count": count
+            "message": "Token cleanup not required in current version",
+            "note": "Expired tokens automatically become invalid"
         }), 200
         
     except Exception as e:
@@ -353,12 +332,11 @@ def blacklist_stats():
     管理員端點：取得黑名單統計資訊
     """
     try:
-        # 使用新的 JWT Manager 取得黑名單統計
-        jwt_manager = get_jwt_manager()
-        stats = jwt_manager.get_blacklist_stats()
-        
+        # 注意：新版本的 JWT Manager 不支援黑名單統計功能
+        # JWT token 的驗證是基於簽名和過期時間，無需黑名單
         return jsonify({
-            "blacklist_stats": stats
+            "message": "Blacklist stats not available in current version",
+            "note": "JWT tokens are validated by signature and expiration time"
         }), 200
         
     except Exception as e:

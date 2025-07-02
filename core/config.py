@@ -6,7 +6,7 @@ from urllib.parse import quote_plus
 load_dotenv()
 
 # JWT 配置
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY environment variable is required. Please set it in your .env file")
 
