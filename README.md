@@ -278,7 +278,7 @@ curl -X GET https://jwt-autunctions-ypvdbtxjmv.cn-shanghai.fcapp.run/profile \
 ### 4. 更新個人資料
 
 ```bash
-curl -X PUT https://jwt-autfunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/profile \
+curl -X PUT https://jwt-autunctions-ypvdbtxjmv.cn-shanghai.fcapp.run/profile \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -289,7 +289,7 @@ curl -X PUT https://jwt-autfunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/p
 ### 5. 變更密碼
 
 ```bash
-curl -X POST https://jwt-autfunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/change-password \
+curl -X POST https://jwt-autunctions-ypvdbtxjmv.cn-shanghai.fcapp.run/change-password \
   -H "Content-Type: application/json" \
   -d '{
     "email": "newuser@example.com",
@@ -301,7 +301,7 @@ curl -X POST https://jwt-autfunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/
 ### 6. 帳戶切換
 
 ```bash
-curl -X POST https://jwt-autfunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/switch-account \
+curl -X POST https://jwt-autunctions-ypvdbtxjmv.cn-shanghai.fcapp.run/switch-account \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@example.com",
@@ -312,7 +312,7 @@ curl -X POST https://jwt-autfunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/
 ### 7. 登出
 
 ```bash
-curl -X POST https://jwt-autunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/logout \
+curl -X POST https://jwt-autunctions-ypvdbtxjmv.cn-shanghai.fcapp.run/logout \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -433,19 +433,20 @@ python utils/token_cleaner/deploy.py --cron "0 0 * * * *"
 #### 3. 驗證部署
 
 部署完成後，您可以在阿里雲控制台查看：
+
 - **Function Compute 控制台**: 查看服務和 Function 狀態
 - **日誌服務**: 查看執行日誌和清理結果
 - **監控服務**: 查看執行時間和記憶體使用情況
 
 ### 常用 Cron 表達式
 
-| 表達式 | 說明 |
-|--------|------|
-| `0 0 * * * *` | 每小時執行一次 |
-| `0 0 0 * * *` | 每天午夜執行 |
-| `0 0 12 * * *` | 每天中午執行 |
+| 表達式             | 說明             |
+| ------------------ | ---------------- |
+| `0 0 * * * *`    | 每小時執行一次   |
+| `0 0 0 * * *`    | 每天午夜執行     |
+| `0 0 12 * * *`   | 每天中午執行     |
 | `0 */30 * * * *` | 每30分鐘執行一次 |
-| `0 0 */2 * * *` | 每2小時執行一次 |
+| `0 0 */2 * * *`  | 每2小時執行一次  |
 
 ### 監控和維護
 
