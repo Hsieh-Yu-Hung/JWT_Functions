@@ -39,7 +39,13 @@ JWT_Authentication/
 │   └── auth_routes.py           # 認證路由（已整合新套件）
 ├── utils/                        # 工具模組
 │   ├── __init__.py              # 模組初始化
-│   └── token_cleanup_scheduler.py # Token 清理排程器（已整合新套件）
+│   ├── token_cleanup_scheduler.py # Token 清理排程器（已整合新套件）
+│   └── token_cleaner/           # JWT Token 清理 Function
+│       ├── __init__.py          # 模組初始化
+│       ├── cleanup_function.py  # 主要清理邏輯
+│       ├── deploy_container.py  # Python 容器化部署腳本
+│       ├── deploy_container.sh  # Shell 容器化部署腳本
+│       └── README.md           # 詳細使用說明
 ├── package/                      # JWT Auth Middleware 套件開發目錄
 │   └── jwt_auth_middleware/     # 套件原始碼
 └── generateSecret/               # 密鑰產生工具（保持原有）
@@ -79,6 +85,11 @@ JWT_Authentication/
 ### 🛠️ Utils 模組
 
 - **token_cleanup_scheduler.py**: Token 清理排程器（已整合 jwt-auth-middleware 套件）
+- **token_cleaner/**: JWT Token 清理 Function（適用於 Function Compute 環境）
+  - **cleanup_function.py**: 主要清理邏輯
+  - **deploy_container.py**: Python 容器化部署腳本
+  - **deploy_container.sh**: Shell 容器化部署腳本
+  - **README.md**: 詳細使用說明
 
 ### 🔑 GenerateSecret 模組
 
@@ -377,6 +388,88 @@ curl -X POST https://jwt-autunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/logout
 - ✅ **角色管理** - 完整的使用者角色和權限管理
 - ✅ **統計資訊** - 即時統計黑名單和使用者資訊
 - ✅ **批量操作** - 支援批量更新和清理
+
+## 🧹 JWT Token 清理功能
+
+### 背景說明
+
+在阿里雲 Function Compute 的 Web Function 環境中，由於函數是事件驅動的，無法維持長時間運行的背景執行緒來進行定期清理。為了解決這個問題，我們提供了獨立的 **JWT Token 清理 Function**。
+
+### 功能特色
+
+- ✅ **獨立部署**: 與主服務分離，不影響主服務性能
+- ✅ **定時觸發**: 支援 Cron 表達式設定執行頻率
+- ✅ **記憶體優化**: 自動清理過期 Token，節省記憶體使用
+- ✅ **詳細統計**: 提供清理結果和記憶體使用統計
+- ✅ **自動化部署**: 提供 Python 和 Shell 兩種部署腳本
+
+### 快速部署
+
+#### 1. 環境準備
+
+```bash
+# 安裝阿里雲 CLI
+pip install aliyun-cli
+
+# 設定環境變數（在 .env 檔案中）
+JWT_SECRET_KEY="your-jwt-secret-key"
+ALIBABA_CLOUD_ACCESS_KEY_ID="your-access-key-id"
+ALIBABA_CLOUD_ACCESS_KEY_SECRET="your-access-key-secret"
+ALIBABA_CLOUD_REGION="cn-shanghai"
+```
+
+#### 2. 部署清理 Function
+
+```bash
+# 使用 Shell 腳本（推薦）
+./utils/token_cleaner/deploy.sh
+
+# 自訂執行頻率
+./utils/token_cleaner/deploy.sh --cron "0 0 0 * * *"  # 每天午夜執行
+./utils/token_cleaner/deploy.sh --cron "0 */30 * * * *"  # 每30分鐘執行
+
+# 使用 Python 腳本
+python utils/token_cleaner/deploy.py --cron "0 0 * * * *"
+```
+
+#### 3. 驗證部署
+
+部署完成後，您可以在阿里雲控制台查看：
+- **Function Compute 控制台**: 查看服務和 Function 狀態
+- **日誌服務**: 查看執行日誌和清理結果
+- **監控服務**: 查看執行時間和記憶體使用情況
+
+### 常用 Cron 表達式
+
+| 表達式 | 說明 |
+|--------|------|
+| `0 0 * * * *` | 每小時執行一次 |
+| `0 0 0 * * *` | 每天午夜執行 |
+| `0 0 12 * * *` | 每天中午執行 |
+| `0 */30 * * * *` | 每30分鐘執行一次 |
+| `0 0 */2 * * *` | 每2小時執行一次 |
+
+### 監控和維護
+
+```bash
+# 查看執行日誌
+aliyun fc get-function-logs \
+  --service-name jwt-token-cleaner \
+  --function-name cleanup \
+  --limit 10
+
+# 手動觸發清理
+aliyun fc invoke-function \
+  --service-name jwt-token-cleaner \
+  --function-name cleanup
+
+# 重新部署
+./utils/token_cleaner/deploy.sh
+```
+
+### 詳細文件
+
+更多詳細資訊請參考：[utils/token_cleaner/README.md](utils/token_cleaner/README.md)
 
 ## 🔧 配置選項
 

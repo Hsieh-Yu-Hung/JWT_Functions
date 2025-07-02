@@ -71,6 +71,7 @@ coverage.xml
 # Function Compute configuration files
 config/fc-config.json
 temp_update_body.json
+*fc-config.json
 
 # IDE
 .vscode/

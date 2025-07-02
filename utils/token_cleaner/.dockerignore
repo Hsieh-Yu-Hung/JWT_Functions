@@ -1,0 +1,61 @@
+# Git 相關
+.git
+.gitignore
+
+# Python 相關
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# 虛擬環境
+venv/
+ENV/
+env/
+.venv
+
+# IDE 相關
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 作業系統相關
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 部署相關
+deploy.py
+deploy.sh
+deploy_container.py
+deploy_container.sh
+test_cleanup.py
+README.md
+fc-config.json
+temp_*.json
+
+# 其他
+*.tmp
+*.temp 
