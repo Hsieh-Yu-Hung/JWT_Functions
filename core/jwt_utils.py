@@ -2,14 +2,14 @@ import jwt
 from datetime import datetime, timedelta, UTC
 from core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from database.blacklist_model import BlacklistModel
-from database.role_model import RoleModel
+from database.user_role_mapping_model import UserRoleMappingModel
 import logging
 
 logger = logging.getLogger(__name__)
 
 # 初始化模型
 blacklist_model = BlacklistModel()
-role_model = RoleModel()
+user_role_model = UserRoleMappingModel()
 
 def create_access_token(data: dict):
     """建立 JWT token"""
@@ -23,7 +23,7 @@ def create_access_token(data: dict):
     user_id = data.get('sub')
     email = data.get('email', user_id)
     if user_id:
-        role_model.ensure_user_role_exists(user_id, email)
+        user_role_model.ensure_user_role_exists(user_id, email)
     
     logger.info(f"✅ Token 建立成功: {data.get('sub', 'unknown')}")
     print(f"✅ Token 建立成功: {data.get('sub', 'unknown')}")
@@ -39,13 +39,13 @@ def verify_token(token: str):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
         # 檢查使用者角色是否仍然有效
-        user_roles = role_model.get_user_roles(payload.get('sub'))
-        if not user_roles:
+        user_role = user_role_model.get_user_role(payload.get('sub'))
+        if not user_role:
             raise Exception("User role not found or inactive")
         
         # 將角色資訊加入 payload
-        payload['roles'] = user_roles.get('roles', [])
-        payload['permissions'] = user_roles.get('permissions', [])
+        payload['role_name'] = user_role.get('role_name', 'user')
+        payload['permissions'] = user_role_model.get_user_permissions(payload.get('sub'))
         
         return payload
         

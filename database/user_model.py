@@ -31,7 +31,7 @@ class UserModel(BaseModel):
         except Exception as e:
             logger.error(f"❌ User 索引建立失敗: {e}")
     
-    def register_user(self, email: str, password: str, username: str = None, role: str = "user"):
+    def register_user(self, email: str, password: str, username: str = None):
         """
         註冊新使用者
         
@@ -39,7 +39,6 @@ class UserModel(BaseModel):
             email: 使用者 email
             password: 明文密碼
             username: 使用者名稱（可選）
-            role: 使用者角色
             
         Returns:
             註冊成功返回使用者 ID，失敗返回 None
@@ -63,7 +62,6 @@ class UserModel(BaseModel):
                 "email": email,
                 "password_hash": password_hash,
                 "username": username or email.split("@")[0],  # 如果沒有提供 username，使用 email 前綴
-                "role": role,
                 "is_active": True,
                 "created_at": datetime.now(UTC),
                 "updated_at": datetime.now(UTC),
@@ -121,7 +119,6 @@ class UserModel(BaseModel):
                 "id": str(user["_id"]),
                 "email": user["email"],
                 "username": user["username"],
-                "role": user["role"],
                 "is_active": user["is_active"],
                 "created_at": user["created_at"],
                 "last_login": user["last_login"]
@@ -154,7 +151,6 @@ class UserModel(BaseModel):
                 "id": str(user["_id"]),
                 "email": user["email"],
                 "username": user["username"],
-                "role": user["role"],
                 "is_active": user["is_active"],
                 "created_at": user["created_at"],
                 "last_login": user["last_login"]

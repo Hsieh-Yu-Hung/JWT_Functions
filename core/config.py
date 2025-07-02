@@ -31,6 +31,7 @@ MONGO_URI = f"mongodb://{encoded_username}:{encoded_password}@{DB_URI}"
 # MongoDB Collection 名稱
 MONGODB_BLACKLIST_COLLECTION = "blacklist"
 MONGODB_ROLE_COLLECTION = "role_list"
+MONGODB_USER_ROLE_COLLECTION = "user_role_list"
 MONGODB_USERS_COLLECTION = "users"
 
 # 資料庫連接池配置

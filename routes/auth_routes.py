@@ -1,10 +1,10 @@
 from flask import Blueprint, request, jsonify, current_app
 from jwt_auth_middleware import verify_token, create_access_token, revoke_token
-from database.role_model import RoleModel
+from database.user_role_mapping_model import UserRoleMappingModel
 from database.user_model import UserModel
 
 auth_bp = Blueprint('auth', __name__)
-role_model = RoleModel()
+user_role_model = UserRoleMappingModel()
 user_model = UserModel()
 
 @auth_bp.route('/register', methods=['POST'])
@@ -22,7 +22,6 @@ def register():
         email = data.get("email")
         password = data.get("password")
         username = data.get("username")  # 可選
-        role = data.get("role", "user")  # 預設為 user
         
         # 基本驗證
         if not email or "@" not in email:
@@ -32,11 +31,11 @@ def register():
             return jsonify({"msg": "Password must be at least 6 characters long"}), 400
         
         # 註冊使用者
-        user_id = user_model.register_user(email, password, username, role)
+        user_id = user_model.register_user(email, password, username)
         
         if user_id:
-            # 確保使用者角色存在
-            role_model.ensure_user_role_exists(email, email)
+            # 確保使用者角色存在（預設為 user 角色）
+            user_role_model.ensure_user_role_exists(email, email, "user")
             
             return jsonify({
                 "message": "User registered successfully",
@@ -73,16 +72,15 @@ def login():
     if not user:
         return jsonify({"msg": "Invalid credentials"}), 401
     
+    # 確保使用者角色存在
+    user_role_model.ensure_user_role_exists(email, email, "user")
+    
     # 建立 token 時包含使用者資訊
     token_data = {
         "sub": user["email"], 
         "email": user["email"],
-        "role": user["role"],
         "user_id": user["id"]
     }
-    
-    # 確保使用者角色存在
-    role_model.ensure_user_role_exists(email, email)
     
     # 使用 create_access_token 函數建立 token
     token = create_access_token(token_data)
@@ -92,8 +90,7 @@ def login():
         "user": {
             "id": user["id"],
             "email": user["email"],
-            "username": user["username"],
-            "role": user["role"]
+            "username": user["username"]
         }
     })
 
@@ -139,16 +136,15 @@ def switch_account():
     if not user:
         return jsonify({"msg": "Invalid credentials"}), 401
 
+    # 確保使用者角色存在
+    user_role_model.ensure_user_role_exists(email, email, "user")
+    
     # 產生新帳戶的 token
     token_data = {
         "sub": user["email"], 
         "email": user["email"],
-        "role": user["role"],
         "user_id": user["id"]
     }
-    
-    # 確保使用者角色存在
-    role_model.ensure_user_role_exists(email, email)
     
     # 使用 create_access_token 函數建立 token
     new_token = create_access_token(token_data)
@@ -159,8 +155,7 @@ def switch_account():
         "user": {
             "id": user["id"],
             "email": user["email"],
-            "username": user["username"],
-            "role": user["role"]
+            "username": user["username"]
         },
         "note": "Please replace the old token with this new token"
     }), 200
@@ -192,19 +187,19 @@ def get_profile():
             return jsonify({"message": "User not found"}), 404
         
         # 取得使用者角色資訊
-        user_roles = role_model.get_user_roles(email)
+        user_role = user_role_model.get_user_role(email)
+        user_permissions = user_role_model.get_user_permissions(email)
         
         # 組合完整的使用者資料
         profile_data = {
             "id": user["id"],
             "email": user["email"],
             "username": user["username"],
-            "role": user["role"],
+            "role_name": user_role.get("role_name", "user") if user_role else "user",
             "is_active": user["is_active"],
             "created_at": user["created_at"],
             "last_login": user["last_login"],
-            "roles": user_roles.get("roles", []) if user_roles else [],
-            "permissions": user_roles.get("permissions", []) if user_roles else []
+            "permissions": user_permissions
         }
         
         return jsonify({
@@ -258,18 +253,18 @@ def update_profile():
         if success:
             # 重新取得更新後的使用者資料
             user = user_model.get_user_by_email(email)
-            user_roles = role_model.get_user_roles(email)
+            user_role = user_role_model.get_user_role(email)
+            user_permissions = user_role_model.get_user_permissions(email)
             
             profile_data = {
                 "id": user["id"],
                 "email": user["email"],
                 "username": user["username"],
-                "role": user["role"],
+                "role_name": user_role.get("role_name", "user") if user_role else "user",
                 "is_active": user["is_active"],
                 "created_at": user["created_at"],
                 "last_login": user["last_login"],
-                "roles": user_roles.get("roles", []) if user_roles else [],
-                "permissions": user_roles.get("permissions", []) if user_roles else []
+                "permissions": user_permissions
             }
             
             return jsonify({
@@ -367,15 +362,17 @@ def update_user_roles(user_id):
     """
     try:
         data = request.json
-        roles = data.get('roles')
-        permissions = data.get('permissions')
+        role_name = data.get('role_name')
         
-        success = role_model.update_user_roles(user_id, roles, permissions)
+        if not role_name:
+            return jsonify({"error": "role_name is required"}), 400
+        
+        success = user_role_model.update_user_role(user_id, role_name)
         
         if success:
-            return jsonify({"message": "User roles updated successfully"}), 200
+            return jsonify({"message": "User role updated successfully"}), 200
         else:
-            return jsonify({"error": "Failed to update user roles"}), 400
+            return jsonify({"error": "Failed to update user role"}), 400
             
     except Exception as e:
         return jsonify({"error": str(e)}), 500
