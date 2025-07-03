@@ -1,0 +1,50 @@
+{
+  "function": {
+    "name": "jwt-auth-functions",
+    "description": "JWT Authentication Service for Function Compute",
+    "runtime": "custom-container",
+    "handler": "index.handler",
+    "timeout": 60,
+    "memorySize": 4096,
+    "cpu": 4,
+    "diskSize": 512,
+    "instanceConcurrency": 10,
+    "internetAccess": true,
+    "enableLongLiving": false
+  },
+  "container": {
+    "image": "crpi-hfqxuov7ff0bdkpc.cn-shanghai.personal.cr.aliyuncs.com/accuin-bio/jwt-functions:latest",
+    "port": 9000,
+    "command": null,
+    "entrypoint": null
+  },
+  "vpc": {
+    "vpcId": "vpc-uf6g60tlmx6zkp0q0yc84",
+    "vSwitchIds": [
+      "vsw-uf6ekfgoluqjz5hs6tu1q",
+      "vsw-uf62xta73wz4pehkytfsf"
+    ],
+    "securityGroupId": "sg-uf66lomhewh0z13efsbo",
+    "role": null
+  },
+  "log": {
+    "project": "serverless-cn-shanghai-20802221-c189-54a9-bd0a-4f3481172dc0",
+    "logstore": "default-logs",
+    "enableRequestMetrics": true,
+    "enableInstanceMetrics": true,
+    "enableCustomExtraLog": true,
+    "logBeginRule": "DefaultRegex"
+  },
+  "acr": {
+    "domain": "crpi-hfqxuov7ff0bdkpc.cn-shanghai.personal.cr.aliyuncs.com",
+    "namespace": "accuin-bio",
+    "imageName": "jwt-functions",
+    "imageVersion": "latest"
+  },
+  "region": "cn-shanghai",
+  "resourceGroupId": "rg-acfns5yx4l5u4rq",
+  "environmentVariables": {
+    "PYTHONPATH": "/var/task",
+    "FLASK_ENV": "production"
+  }
+} 

@@ -12,9 +12,9 @@ from typing import Dict, Any
 # 嘗試載入環境變數
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(dotenv_path=".env.local")
 except ImportError:
-    pass
+    print("❌ 缺少 dotenv 模組")
 
 # 嘗試導入 pymongo
 try:

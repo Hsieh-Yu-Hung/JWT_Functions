@@ -1,0 +1,33 @@
+{
+  "function": {
+    "name": "jwt-token-cleaner",
+    "description": "JWT Token 定期清理服務",
+    "runtime": "custom-container",
+    "handler": "cleanup_function.handler",
+    "timeout": 60,
+    "memorySize": 128,
+    "cpu": 1,
+    "diskSize": 512,
+    "instanceConcurrency": 1,
+    "internetAccess": true,
+    "enableLongLiving": false
+  },
+  "container": {
+    "image": "crpi-hfqxuov7ff0bdkpc.cn-shanghai.personal.cr.aliyuncs.com/accuin-bio/jwt-token-cleaner:latest",
+    "port": 9000,
+    "command": null,
+    "entrypoint": null
+  },
+
+  "acr": {
+    "domain": "crpi-hfqxuov7ff0bdkpc.cn-shanghai.personal.cr.aliyuncs.com",
+    "namespace": "accuin-bio",
+    "imageName": "jwt-token-cleaner",
+    "imageVersion": "latest"
+  },
+  "region": "cn-shanghai",
+  "environmentVariables": {
+    "PYTHONPATH": "/app",
+    "FLASK_ENV": "production"
+  }
+} 
