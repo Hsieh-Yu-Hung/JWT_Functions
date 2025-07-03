@@ -27,6 +27,65 @@ utils/token_cleaner/
 └── README.md              # 說明文件
 ```
 
+## 🛠️安裝與啟動
+
+### 1.  建立虛擬環境
+
+```
+python -m venv venv
+```
+
+### 2.  啟動虛擬環境
+
+```
+# Windows
+venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+```
+
+### 3.  安裝依賴
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. 設定環境變數
+
+編輯 `.env`.local 檔案，填入實際的配置值：
+
+```bash
+# MongoDB 登入
+DB_ACCOUNT="資料庫帳戶"
+DB_PASSWORD="資料庫密碼"
+DB_URI="資料庫URI"
+DB_NAME="資料庫名稱"
+
+# 映像存放倉庫
+ACR_USERNAME="ACR帳戶"
+ACR_PASSWORD="ACR密碼"
+
+# JWT 設定
+JWT_SECRET_KEY="請生成JWT密碼或是繼承自此專案的"
+```
+
+### 5. 啟動服務
+
+```bash
+# Docker 部署到 Function Compute (自動化腳本)
+bash deploy_container.sh
+```
+
+### 6. 測試 token 清理功能
+
+```bash
+# 確保服務正在運行
+python test_cleanup.py
+```
+
+## ⚠️ 部署注意事項
+
 ## 🚀 快速開始
 
 ### 1. 環境準備

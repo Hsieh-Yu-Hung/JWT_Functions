@@ -217,7 +217,23 @@ cd JWT_Functions
 
 ## 🛠️安裝與啟動
 
-### 1. 安裝依賴
+### 1.  建立虛擬環境
+
+```
+python -m venv venv
+```
+
+### 2.  啟動虛擬環境
+
+```
+# Windows
+venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+```
+
+### 3.  安裝依賴
 
 ```bash
 pip install -r requirements.txt
@@ -225,7 +241,7 @@ pip install -r requirements.txt
 
 > **注意**: 本專案使用 `jwt-auth-middleware` 套件，會自動從 GitHub 安裝最新版本。
 
-### 2. 設定環境變數
+### 4. 設定環境變數
 
 編輯 `.env` 檔案，填入實際的配置值：
 
@@ -244,14 +260,14 @@ ACR_PASSWORD="ACR密碼"
 JWT_SECRET_KEY="請生成JWT密碼或是繼承自此專案的"
 ```
 
-### 3. 啟動服務
+### 5. 啟動服務
 
 ```bash
 # Docker 部署到 Function Compute (自動化腳本)
 bash scripts/deploy.sh
 ```
 
-### 4. 測試 JWT Auth Middleware 套件
+### 6. 測試 JWT Auth Middleware 套件
 
 ```bash
 # 確保服務正在運行
