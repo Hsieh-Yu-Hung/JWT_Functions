@@ -524,8 +524,14 @@ curl -X POST https://jwt-autunctions-ypvdbtxjmv.cn-shanghai.fcapp.run/logout \
 #### 1. 環境準備
 
 ```bash
-# 安裝阿里雲 CLI
+# 啟動虛擬環境 (Windows)
+venv\Scripts\activate
+
+# 安裝阿里雲 CLI (Windows)
 pip install aliyun-cli
+
+# 安裝阿里雲 (MacOS)
+brew install aliyun-cli
 
 # 設定環境變數（在 .env 檔案中）
 JWT_SECRET_KEY="your-jwt-secret-key"
@@ -792,8 +798,17 @@ export ALIBABA_CLOUD_ACCESS_KEY_SECRET=your_access_key_secret
 ### 2. 安裝必要工具
 
 ```bash
-# 安裝 Aliyun CLI
-npm install -g @alicloud/fun
+# 啟動虛擬環境 (Windows)
+venv/Scripts/activate
+
+# 啟動虛擬環境 (MacOS)
+source venv/Scripts/activate
+
+# 安裝阿里雲 CLI (Windows)
+pip install aliyun-cli
+
+# 安裝阿里雲 (MacOS)
+brew install aliyun-cli
 
 # 安裝 Python 依賴
 pip install -r requirements.txt
