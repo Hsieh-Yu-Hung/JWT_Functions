@@ -356,7 +356,7 @@ def get_users():
         return jsonify({"error": str(e)}), 500
 
 @auth_bp.route('/admin/users/<user_id>/roles', methods=['PUT'])
-def update_user_roles(user_id):
+def update_user_role_mapping(user_id):
     """
     管理員端點：更新使用者角色
     """

@@ -10,9 +10,8 @@ import sys
 import subprocess
 import argparse
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import shlex
-
 
 class FunctionComputeDeployer:
     """Function Compute 部署器"""

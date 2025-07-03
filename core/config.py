@@ -13,7 +13,46 @@ if not SECRET_KEY:
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 720
 
-# MongoDB 配置（使用原有的環境變數名稱）
+# API 配置 - 選擇使用公網或內網 API
+API_MODE = os.environ.get("API_MODE")
+if not API_MODE:
+    raise ValueError("API_MODE environment variable is required. Please set it in your .env file (internal or public)")
+API_MODE = API_MODE.lower()
+
+if API_MODE not in ["internal", "public"]:
+    raise ValueError("API_MODE must be either 'internal' or 'public'. Please check your .env file")
+
+# 公網 API 配置
+PUBLIC_API_BASE_URL = os.environ.get("PUBLIC_API_BASE_URL")
+if not PUBLIC_API_BASE_URL:
+    raise ValueError("PUBLIC_API_BASE_URL environment variable is required. Please set it in your .env file")
+
+PUBLIC_API_KEY = os.environ.get("PUBLIC_API_KEY")
+if not PUBLIC_API_KEY:
+    raise ValueError("PUBLIC_API_KEY environment variable is required. Please set it in your .env file")
+
+# 內網 API 配置
+INTERNAL_API_BASE_URL = os.environ.get("INTERNAL_API_BASE_URL")
+if not INTERNAL_API_BASE_URL:
+    raise ValueError("INTERNAL_API_BASE_URL environment variable is required. Please set it in your .env file")
+
+INTERNAL_API_KEY = os.environ.get("INTERNAL_API_KEY")
+if not INTERNAL_API_KEY:
+    raise ValueError("INTERNAL_API_KEY environment variable is required. Please set it in your .env file")
+
+# 根據模式選擇 API 配置
+if API_MODE == "public":
+    API_BASE_URL = PUBLIC_API_BASE_URL
+    API_KEY = PUBLIC_API_KEY
+    print(f"🌐 使用公網 API: {API_BASE_URL}")
+elif API_MODE == "internal":
+    API_BASE_URL = INTERNAL_API_BASE_URL
+    API_KEY = INTERNAL_API_KEY
+    print(f"🏠 使用內網 API: {API_BASE_URL}")
+else:
+    raise ValueError("API_MODE must be either 'internal' or 'public'. Please check your .env file")
+
+# MongoDB 配置（保留原有配置以備用）
 DB_ACCOUNT = os.environ.get("DB_ACCOUNT")
 DB_PASSWORD = os.environ.get("DB_PASSWORD")
 DB_URI = os.environ.get("DB_URI")
@@ -31,7 +70,7 @@ MONGO_URI = f"mongodb://{encoded_username}:{encoded_password}@{DB_URI}"
 # MongoDB Collection 名稱
 MONGODB_BLACKLIST_COLLECTION = "blacklist"
 MONGODB_ROLE_COLLECTION = "role_list"
-MONGODB_USER_ROLE_COLLECTION = "user_role_list"
+MONGODB_USER_ROLE_COLLECTION = "user_role_mapping"
 MONGODB_USERS_COLLECTION = "users"
 
 # 資料庫連接池配置

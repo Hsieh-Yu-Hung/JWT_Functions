@@ -1,42 +1,41 @@
 from datetime import datetime, UTC
-from database.base_model import BaseModel
-from core.config import MONGODB_ROLE_COLLECTION
 import logging
+from database.api_manager import api_manager
 
 logger = logging.getLogger(__name__)
 
-class RoleModel(BaseModel):
+class RoleModel:
+    """使用 API 的角色模型"""
+    
     def __init__(self):
-        super().__init__(MONGODB_ROLE_COLLECTION)
+        self.api = api_manager
         self._initialize_default_roles()
     
-    def _create_indexes(self):
-        """建立索引"""
-        try:
-            # 確保 collection 已初始化
-            if self.collection is None:
-                from database.database import db_manager
-                self.collection = db_manager.get_collection(self.collection_name)
-                self._initialized = True
-            
-            # 為 role_id 建立唯一索引
-            self.create_index("role_id", unique=True)
-            # 為 role_name 建立唯一索引
-            self.create_index("role_name", unique=True)
-            # 為 is_active 建立索引
-            self.create_index("is_active")
-            # 為 priority 建立索引
-            self.create_index("priority")
-            
-        except Exception as e:
-            logger.error(f"❌ Role 索引建立失敗: {e}")
+    def _log_success(self, message: str):
+        """記錄成功訊息"""
+        logger.info(f"✅ {message}")
+        print(f"✅ {message}")
+    
+    def _log_warning(self, message: str):
+        """記錄警告訊息"""
+        logger.warning(f"⚠️ {message}")
+        print(f"⚠️ {message}")
+    
+    def _log_error(self, message: str, error: Exception = None):
+        """記錄錯誤訊息"""
+        if error:
+            logger.error(f"❌ {message}: {error}")
+            print(f"❌ {message}: {error}")
+        else:
+            logger.error(f"❌ {message}")
+            print(f"❌ {message}")
     
     def _initialize_default_roles(self):
         """初始化預設角色"""
         try:
             # 檢查是否已存在預設角色
-            existing_roles = self.find_many({})
-            if existing_roles:
+            result = self.api.get_all_roles()
+            if result.get("success") and result.get("data"):
                 logger.info("✅ 預設角色已存在，跳過初始化")
                 return
             
@@ -50,8 +49,8 @@ class RoleModel(BaseModel):
                     "inherited_roles": [],  # user 角色不繼承其他角色
                     "is_active": True,
                     "priority": 10,
-                    "created_at": datetime.now(UTC),
-                    "updated_at": datetime.now(UTC)
+                    "created_at": datetime.now(UTC).isoformat(),
+                    "updated_at": datetime.now(UTC).isoformat()
                 },
                 {
                     "role_id": "admin_role_001", 
@@ -61,13 +60,13 @@ class RoleModel(BaseModel):
                     "inherited_roles": ["user"],  # admin 繼承 user 角色
                     "is_active": True,
                     "priority": 100,
-                    "created_at": datetime.now(UTC),
-                    "updated_at": datetime.now(UTC)
+                    "created_at": datetime.now(UTC).isoformat(),
+                    "updated_at": datetime.now(UTC).isoformat()
                 }
             ]
             
             for role in default_roles:
-                self.insert_one(role)
+                self.api.create_role(role)
             
             logger.info("✅ 預設角色初始化完成")
             
@@ -79,14 +78,14 @@ class RoleModel(BaseModel):
         """建立新角色"""
         try:
             # 檢查角色名稱是否已存在
-            existing_role = self.find_one({"role_name": role_name})
+            existing_role = self.get_role_by_name(role_name)
             if existing_role:
                 raise Exception(f"角色名稱 '{role_name}' 已存在")
             
             # 驗證繼承的角色是否存在
             if inherited_roles:
                 for inherited_role in inherited_roles:
-                    if not self.find_one({"role_name": inherited_role, "is_active": True}):
+                    if not self.get_role_by_name(inherited_role):
                         raise Exception(f"繼承的角色 '{inherited_role}' 不存在或已停用")
             
             role_data = {
@@ -97,16 +96,17 @@ class RoleModel(BaseModel):
                 "inherited_roles": inherited_roles or [],
                 "is_active": True,
                 "priority": priority,
-                "created_at": datetime.now(UTC),
-                "updated_at": datetime.now(UTC)
+                "created_at": datetime.now(UTC).isoformat(),
+                "updated_at": datetime.now(UTC).isoformat()
             }
             
-            result_id = self.insert_one(role_data)
-            if result_id:
+            result = self.api.create_role(role_data)
+            if result.get("success"):
+                role_id = result.get("data", {}).get("id")
                 self._log_success(f"角色建立成功: {role_name}")
-                return result_id
+                return role_id
             else:
-                raise Exception("插入失敗")
+                raise Exception(f"角色建立失敗: {result.get('message', '未知錯誤')}")
                 
         except Exception as e:
             self._log_error("建立角色失敗", e)
@@ -115,7 +115,20 @@ class RoleModel(BaseModel):
     def get_role_by_name(self, role_name: str):
         """根據角色名稱取得角色"""
         try:
-            return self.find_one({"role_name": role_name, "is_active": True})
+            result = self.api.get_role_by_name(role_name)
+            if result.get("success") and result.get("data"):
+                # 如果 data 是列表，取第一個元素
+                role_data = result["data"]
+                if isinstance(role_data, list):
+                    if not role_data:
+                        return None
+                    role = role_data[0]
+                else:
+                    role = role_data
+                
+                if role.get("is_active", False):
+                    return role
+            return None
         except Exception as e:
             self._log_error("取得角色失敗", e)
             return None
@@ -123,7 +136,12 @@ class RoleModel(BaseModel):
     def get_role_by_id(self, role_id: str):
         """根據角色 ID 取得角色"""
         try:
-            return self.find_one({"role_id": role_id, "is_active": True})
+            result = self.api.get_role_by_id(role_id)
+            if result.get("success") and result.get("data"):
+                role = result["data"]
+                if role.get("is_active", False):
+                    return role
+            return None
         except Exception as e:
             self._log_error("取得角色失敗", e)
             return None
@@ -131,7 +149,11 @@ class RoleModel(BaseModel):
     def get_all_roles(self):
         """取得所有啟用的角色"""
         try:
-            return self.find_many({"is_active": True})
+            result = self.api.get_all_roles()
+            if result.get("success"):
+                roles = result.get("data", [])
+                return [role for role in roles if role.get("is_active", False)]
+            return []
         except Exception as e:
             self._log_error("取得所有角色失敗", e)
             return []
@@ -178,7 +200,12 @@ class RoleModel(BaseModel):
                    priority: int = None):
         """更新角色"""
         try:
-            update_data = {"updated_at": datetime.now(UTC)}
+            # 先取得角色 ID
+            role = self.get_role_by_name(role_name)
+            if not role:
+                raise Exception(f"角色 '{role_name}' 不存在")
+            
+            update_data = {"updated_at": datetime.now(UTC).isoformat()}
             
             if role_description is not None:
                 update_data["role_description"] = role_description
@@ -187,65 +214,84 @@ class RoleModel(BaseModel):
             if inherited_roles is not None:
                 # 驗證繼承的角色是否存在
                 for inherited_role in inherited_roles:
-                    if not self.find_one({"role_name": inherited_role, "is_active": True}):
+                    if not self.get_role_by_name(inherited_role):
                         raise Exception(f"繼承的角色 '{inherited_role}' 不存在或已停用")
                 update_data["inherited_roles"] = inherited_roles
             if priority is not None:
                 update_data["priority"] = priority
             
-            success = self.update_one({"role_name": role_name}, update_data)
+            result = self.api.update_role(role["_id"], update_data)
             
-            if success:
+            if result.get("success"):
                 self._log_success(f"角色更新成功: {role_name}")
                 return True
             else:
-                self._log_warning(f"角色更新失敗（未找到記錄）: {role_name}")
-                return False
+                raise Exception(f"角色更新失敗: {result.get('message', '未知錯誤')}")
                 
         except Exception as e:
             self._log_error("更新角色失敗", e)
-            return False
+            raise
     
     def deactivate_role(self, role_name: str):
         """停用角色"""
         try:
-            success = self.update_one(
-                {"role_name": role_name},
-                {"is_active": False, "updated_at": datetime.now(UTC)}
-            )
+            role = self.get_role_by_name(role_name)
+            if not role:
+                raise Exception(f"角色 '{role_name}' 不存在")
             
-            if success:
+            update_data = {
+                "is_active": False,
+                "updated_at": datetime.now(UTC).isoformat()
+            }
+            
+            result = self.api.update_role(role["_id"], update_data)
+            
+            if result.get("success"):
                 self._log_success(f"角色已停用: {role_name}")
                 return True
             else:
-                self._log_warning(f"停用角色失敗（未找到記錄）: {role_name}")
-                return False
+                raise Exception(f"停用角色失敗: {result.get('message', '未知錯誤')}")
                 
         except Exception as e:
             self._log_error("停用角色失敗", e)
-            return False
+            raise
     
     def activate_role(self, role_name: str):
         """啟用角色"""
         try:
-            success = self.update_one(
-                {"role_name": role_name},
-                {"is_active": True, "updated_at": datetime.now(UTC)}
-            )
+            # 先取得角色（包括已停用的）
+            result = self.api.get_role_by_name(role_name)
+            if not result.get("success") or not result.get("data"):
+                raise Exception(f"角色 '{role_name}' 不存在")
             
-            if success:
+            # 如果 data 是列表，取第一個元素
+            role_data = result["data"]
+            if isinstance(role_data, list):
+                if not role_data:
+                    raise Exception(f"角色 '{role_name}' 不存在")
+                role = role_data[0]
+            else:
+                role = role_data
+            
+            update_data = {
+                "is_active": True,
+                "updated_at": datetime.now(UTC).isoformat()
+            }
+            
+            result = self.api.update_role(role["_id"], update_data)
+            
+            if result.get("success"):
                 self._log_success(f"角色已啟用: {role_name}")
                 return True
             else:
-                self._log_warning(f"啟用角色失敗（未找到記錄）: {role_name}")
-                return False
+                raise Exception(f"啟用角色失敗: {result.get('message', '未知錯誤')}")
                 
         except Exception as e:
             self._log_error("啟用角色失敗", e)
-            return False
+            raise
     
     def check_role_permission(self, role_name: str, required_permission: str):
-        """檢查角色是否擁有特定權限（包含繼承權限）"""
+        """檢查角色是否擁有指定權限"""
         try:
             permissions = self.get_role_permissions(role_name, include_inherited=True)
             return required_permission in permissions
@@ -254,7 +300,7 @@ class RoleModel(BaseModel):
             return False
     
     def get_role_hierarchy(self, role_name: str):
-        """取得角色的完整繼承層級結構"""
+        """取得角色階層結構"""
         try:
             role = self.get_role_by_name(role_name)
             if not role:
@@ -263,12 +309,12 @@ class RoleModel(BaseModel):
             hierarchy = {
                 "role_name": role_name,
                 "role_description": role.get("role_description"),
-                "direct_permissions": role.get("role_permissions", []),
+                "permissions": role.get("role_permissions", []),
                 "inherited_roles": [],
-                "all_permissions": self.get_role_permissions(role_name, include_inherited=True)
+                "priority": role.get("priority", 0)
             }
             
-            # 遞迴取得繼承角色的詳細資訊
+            # 遞迴取得繼承角色的階層
             for inherited_role_name in role.get("inherited_roles", []):
                 inherited_hierarchy = self.get_role_hierarchy(inherited_role_name)
                 if inherited_hierarchy:
@@ -277,27 +323,24 @@ class RoleModel(BaseModel):
             return hierarchy
             
         except Exception as e:
-            self._log_error("取得角色層級結構失敗", e)
+            self._log_error("取得角色階層失敗", e)
             return None
     
     def delete_role(self, role_name: str):
-        """刪除角色（僅在沒有其他角色繼承時允許）"""
+        """刪除角色（永久刪除）"""
         try:
-            # 檢查是否有其他角色繼承此角色
-            inheriting_roles = self.find_many({"inherited_roles": role_name})
-            if inheriting_roles:
-                inheriting_names = [r["role_name"] for r in inheriting_roles]
-                raise Exception(f"無法刪除角色 '{role_name}'，因為以下角色正在繼承它: {inheriting_names}")
+            role = self.get_role_by_name(role_name)
+            if not role:
+                raise Exception(f"角色 '{role_name}' 不存在")
             
-            success = self.delete_one({"role_name": role_name})
+            result = self.api.delete_role(role["_id"])
             
-            if success:
-                self._log_success(f"角色刪除成功: {role_name}")
+            if result.get("success"):
+                self._log_success(f"角色已刪除: {role_name}")
                 return True
             else:
-                self._log_warning(f"刪除角色失敗（未找到記錄）: {role_name}")
-                return False
+                raise Exception(f"刪除角色失敗: {result.get('message', '未知錯誤')}")
                 
         except Exception as e:
             self._log_error("刪除角色失敗", e)
-            return False 
+            raise 

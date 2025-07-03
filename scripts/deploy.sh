@@ -104,7 +104,7 @@ run_deployment() {
     echo -e "${BLUE}🚀 開始部署...${NC}"
     
     # 構建 Python 命令
-    PYTHON_CMD="python3 scripts/deploy.py"
+    PYTHON_CMD="python scripts/deploy.py"
     
     if [ "$CONFIG_FILE" != "config/fc-config.json" ]; then
         PYTHON_CMD="$PYTHON_CMD --config $CONFIG_FILE"

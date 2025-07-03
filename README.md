@@ -2,7 +2,7 @@
 
 ## 🆕 最新更新
 
-本專案已整合 [jwt-auth-middleware](https://github.com/Hsieh-Yu-Hung/JWT_Midware) 套件，提供更強大和標準化的 JWT 認證功能。
+本專案已整合 [jwt-auth-middleware](https://github.com/Hsieh-Yu-Hung/JWT_Midware) 套件，並更新為使用 MongoDB Operation API 進行資料庫操作。
 
 ### 主要改進：
 
@@ -12,6 +12,9 @@
 - ✅ 更好的錯誤處理和日誌記錄
 - ✅ 支援多種 JWT 演算法
 - ✅ 管理員專用 JWT 管理端點
+- ✅ **新增 API 模式選擇**：支援公網/內網 API 切換
+- ✅ **統一 API 管理器**：所有資料庫操作透過 API 進行
+- ✅ **環境變數驅動配置**：靈活的 API 網址配置
 
 ## 📁 專案目錄結構
 
@@ -27,11 +30,13 @@ JWT_Functions/
 │   └── jwt_utils.py             # JWT 工具函數（已整合到套件中）
 ├── database/                     # 資料庫相關
 │   ├── __init__.py              # 模組初始化
-│   ├── base_model.py            # 基礎模型類別
-│   ├── database.py              # 資料庫連接管理
-│   ├── blacklist_model.py       # Token 黑名單模型
-│   ├── role_model.py            # 使用者角色模型
-│   ├── user_model.py            # 使用者模型
+│   ├── api_manager.py           # API 管理器（新增）
+│   # 基礎模型類別已移除（改為使用 API 架構）
+│   ├── database.py              # 資料庫連接管理（備用）
+│   ├── blacklist_model.py       # Token 黑名單模型（已更新為使用 API）
+│   ├── role_model.py            # 使用者角色模型（已更新為使用 API）
+│   ├── user_model.py            # 使用者模型（已更新為使用 API）
+│   ├── user_role_mapping_model.py # 使用者角色映射模型（已更新為使用 API）
 │   └── README.md                # 資料庫模組說明
 ├── routes/                       # 路由模組
 │   ├── __init__.py              # 模組初始化
@@ -58,13 +63,20 @@ JWT_Functions/
 ├── package/                      # JWT Auth Middleware 套件開發目錄
 │   └── jwt_auth_middleware/     # JWT middleware 套件專案
 ├── tests/                        # 測試檔案
+│   ├── test_system.py           # 統一系統測試腳本
 │   ├── test_auth_routes.py      # 認證路由測試
 │   ├── test_jwt_middleware.py   # JWT 中間件測試
-│   └── API_DOCUMENTATION.md     # API 文件
+│   └── API_GUIDE.md             # 整合 API 指南
 ├── generateSecret/               # 密鑰產生工具
 │   ├── generate_secret.py       # 完整版密鑰產生器
 │   ├── quick_secret.py          # 快速密鑰產生器
 │   └── README.md               # 使用說明
+├── tests/                       # 測試檔案目錄
+│   ├── test_system.py          # 統一系統測試腳本（新增）
+│   ├── test_auth_routes.py     # 認證路由測試
+│   ├── test_jwt_middleware.py  # JWT 中間件測試
+│   └── API_GUIDE.md            # 整合 API 指南（新增）
+├── API_CONFIG.md                # API 配置說明文件（新增）
 ├── Dockerfile                    # 主專案 Docker 配置
 ├── gunicorn.conf.py             # Gunicorn 配置
 └── requirements.txt              # 主專案依賴套件
@@ -89,11 +101,12 @@ JWT_Functions/
 
 ### 🗄️ Database 模組
 
-- **base_model.py**: MongoDB 基礎模型類別，提供通用 CRUD 操作
-- **database.py**: MongoDB 連接池與錯誤處理
-- **blacklist_model.py**: Token 黑名單資料操作、TTL 索引、統計
-- **role_model.py**: 角色權限管理、啟用/停用、權限驗證
-- **user_model.py**: 使用者管理、註冊、登入、密碼驗證
+- **api_manager.py**: API 管理器，統一處理與 MongoDB Operation API 的通信
+- **database.py**: MongoDB 連接池與錯誤處理（備用）
+- **blacklist_model.py**: Token 黑名單資料操作（已更新為使用 API）
+- **role_model.py**: 角色權限管理、啟用/停用、權限驗證（已更新為使用 API）
+- **user_model.py**: 使用者管理、註冊、登入、密碼驗證（已更新為使用 API）
+- **user_role_mapping_model.py**: 使用者角色映射管理（已更新為使用 API）
 
 ### 🛣️ Routes 模組
 
@@ -178,6 +191,37 @@ utils/ 底下是 utils Function，目前只有 token_cleaner 這個功能：
 > - 目前公網地址僅供測試使用，測試完成後將關閉
 > - **未來所有訪問都將使用內網地址**
 > - 請確保您的應用程式配置為使用內網地址進行生產環境部署
+
+## 🔧 API 配置
+
+### 環境變數設定
+
+本專案支援透過環境變數選擇使用公網或內網的 MongoDB Operation API。**所有 API 相關的環境變數都是必需的**，如果未設定會導致應用程式啟動失敗。
+
+```bash
+# API 模式選擇（必需）
+API_MODE=internal  # 或 "public"
+
+# 公網 API 配置（必需）
+PUBLIC_API_BASE_URL=https://api.example.com
+PUBLIC_API_KEY=your_public_api_key_here
+
+# 內網 API 配置（必需）
+INTERNAL_API_BASE_URL=http://localhost:8000
+INTERNAL_API_KEY=your_internal_api_key_here
+```
+
+**⚠️ 重要**: 所有 API 相關的環境變數都必須在 `.env` 檔案中正確設定，否則應用程式會啟動失敗並顯示相應的錯誤訊息。
+
+### 測試 API 配置
+
+執行以下命令測試 API 配置是否正常：
+
+```bash
+python test_api_config.py
+```
+
+詳細配置說明請參考 [API_CONFIG.md](API_CONFIG.md) 文件。
 
 ## 🚀 專案轉移
 
@@ -753,10 +797,10 @@ app.py
 
 ### 新增資料庫模型
 
-1. 繼承 `database.base_model.BaseModel`
-2. 實作 `_create_indexes()` 方法
-3. 在 `database/__init__.py` 匯出新模型
-4. 在其他模組中使用相對路徑引用
+1. 建立新的模型類別，使用 `api_manager` 進行資料操作
+2. 在 `database/__init__.py` 匯出新模型
+3. 在其他模組中使用相對路徑引用
+4. 參考現有模型（如 `UserModel`、`RoleModel`）的實作方式
 
 ## 🔒 安全性考量
 
