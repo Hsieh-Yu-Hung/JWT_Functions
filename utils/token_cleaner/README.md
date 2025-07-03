@@ -18,13 +18,12 @@ JWT Token 清理 Function，專為阿里雲 Function Compute 環境設計的獨�
 utils/token_cleaner/
 ├── __init__.py              # 模組初始化
 ├── cleanup_function.py      # 主要清理邏輯
-├── deploy_container.py     # Python 容器化部署腳本
 ├── deploy_container.sh     # Shell 容器化部署腳本（推薦）
 ├── Dockerfile              # Docker 建構檔案
 ├── requirements.txt        # Python 依賴套件
 ├── fc-config.json         # Function Compute 配置檔案
 ├── .dockerignore          # Docker 忽略檔案
-├── test_container.py      # 容器化部署測試腳本
+├── test_cleanup.py        # 測試腳本
 └── README.md              # 說明文件
 ```
 
@@ -88,14 +87,11 @@ DB_NAME="your-db-name"
 ./utils/token_cleaner/deploy_container.sh --help
 ```
 
-#### 方式二：使用 Python 腳本
+#### 方式二：本地測試
 
 ```bash
-# 容器化部署
-python utils/token_cleaner/deploy_container.py
-
-# 僅執行本地測試
-python utils/token_cleaner/test_container.py
+# 執行本地測試
+python utils/token_cleaner/test_cleanup.py
 ```
 
 ### 4. 驗證部署
@@ -202,11 +198,11 @@ python utils/token_cleaner/test_container.py
 
 ## 🛠️ 本地測試
 
-### 容器化部署測試
+### 本地測試
 
 ```bash
 cd utils/token_cleaner
-python test_container.py
+python test_cleanup.py
 ```
 
 ### 直接執行清理功能
@@ -338,31 +334,6 @@ docker push crpi-hfqxuov7ff0bdkpc.cn-shanghai.personal.cr.aliyuncs.com/accuin-bi
 docker pull crpi-hfqxuov7ff0bdkpc.cn-shanghai.personal.cr.aliyuncs.com/accuin-bio/jwt-token-cleaner:latest
 ```
 
-## 📝 更新日誌
-
-### v1.1.0 (2024-01-15)
-
-- ✅ 新增容器化部署支援
-- ✅ 新增 Docker 建構檔案和配置
-- ✅ 新增 ACR 推送功能
-- ✅ 優化部署腳本和文檔
-
-### v1.0.0 (2024-01-15)
-
-- ✅ 初始版本發布
-- ✅ 支援基本清理功能
-- ✅ 提供自動化部署腳本
-- ✅ 支援定時觸發器
-- ✅ 完整的錯誤處理和日誌記錄
-
-## 🤝 貢獻
-
-歡迎提交 Issue 和 Pull Request 來改進這個專案。
-
-## 📄 授權
-
-本專案採用 MIT 授權條款。
-
 # JWT Token Cleaner 容器化部署
 
 這個目錄包含了 JWT Token Cleaner 的容器化部署腳本和相關配置。
@@ -444,7 +415,7 @@ export ACR_PASSWORD="your-acr-password"
 1. **配置載入**: 自動從 `fc-config.json` 載入所有配置
 2. **依賴檢查**: 檢查 Docker、阿里雲 CLI、jq、Python 等依賴
 3. **Docker 建構**: 建構、標籤、推送 Docker 映像檔到 ACR
-4. **智能部署**: 
+4. **智能部署**:
    - 如果 Function 不存在，自動創建
    - 如果 Function 已存在，自動更新
    - 請在控制台手動設置 Trigger

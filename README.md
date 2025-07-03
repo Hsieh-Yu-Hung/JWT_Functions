@@ -1,4 +1,4 @@
-# JWT Authentication 專案說明
+# JWT Functions 專案說明
 
 ## 🆕 最新更新
 
@@ -16,11 +16,10 @@
 ## 📁 專案目錄結構
 
 ```
-JWT_Authentication/
-├── .env                          # 環境變數檔案（從 env.example 複製）
+JWT_Functions/
+├── .env                          # 環境變數檔案（請聯繫專案管理員取得）
 ├── app.py                        # 主應用程式入口
 ├── requirements.txt              # 依賴套件（包含 jwt-auth-middleware）
-├── env.example                   # 環境變數範例檔案
 ├── README.md                     # 專案說明（本檔案）
 ├── core/                         # 核心功能模組
 │   ├── __init__.py              # 模組初始化
@@ -37,23 +36,39 @@ JWT_Authentication/
 ├── routes/                       # 路由模組
 │   ├── __init__.py              # 模組初始化
 │   └── auth_routes.py           # 認證路由（已整合新套件）
-├── utils/                        # 工具模組
+├── utils/                        # Utils Functions 模組
 │   ├── __init__.py              # 模組初始化
 │   └── token_cleaner/           # JWT Token 清理 Function
 │       ├── __init__.py          # 模組初始化
 │       ├── cleanup_function.py  # 主要清理邏輯
-│       ├── deploy_container.py  # Python 容器化部署腳本
 │       ├── deploy_container.sh  # Shell 容器化部署腳本
+│       ├── Dockerfile           # Docker 映像檔配置
+│       ├── fc-config.json       # Function Compute 配置
+│       ├── requirements.txt     # 依賴套件
+│       ├── test_cleanup.py      # 測試腳本
 │       └── README.md           # 詳細使用說明
+├── scripts/                      # 部署腳本
+│   ├── deploy.py                # Python 部署腳本
+│   ├── deploy.sh                # Shell 部署腳本
+│   ├── test_config.py           # 配置測試腳本
+│   └── README.md               # 部署腳本說明
+├── config/                       # 配置檔案
+│   ├── fc-config.example.json   # Function Compute 配置範例
+│   └── fc-config.json          # Function Compute 實際配置
 ├── package/                      # JWT Auth Middleware 套件開發目錄
-│   └── jwt_auth_middleware/     # 套件原始碼
-└── generateSecret/               # 密鑰產生工具（保持原有）
-    ├── generate_secret.py
-    ├── quick_secret.py
-    └── README.md
+│   └── jwt_auth_middleware/     # JWT middleware 套件專案
+├── tests/                        # 測試檔案
+│   ├── test_auth_routes.py      # 認證路由測試
+│   ├── test_jwt_middleware.py   # JWT 中間件測試
+│   └── API_DOCUMENTATION.md     # API 文件
+├── generateSecret/               # 密鑰產生工具
+│   ├── generate_secret.py       # 完整版密鑰產生器
+│   ├── quick_secret.py          # 快速密鑰產生器
+│   └── README.md               # 使用說明
+├── Dockerfile                    # 主專案 Docker 配置
+├── gunicorn.conf.py             # Gunicorn 配置
+└── requirements.txt              # 主專案依賴套件
 ```
-
-## 🎯 模組功能說明
 
 ### 🔐 JWT Auth Middleware 套件
 
@@ -62,6 +77,10 @@ JWT_Authentication/
 - **自動黑名單管理**: 內建 Token 黑名單功能
 - **多演算法支援**: 支援 HS256演算法
 - **管理端點**: 提供 `/admin/jwt/*` 系列管理端點
+
+* JWT 中間件已製作成 python package, 發佈在 Github 上面
+* 未來需要 JWT 驗證的專案可以安裝此套件, 使用其中驗證功能, 不用每個專案重複實作
+* 連結 : [https://github.com/Hsieh-Yu-Hung/JWT_Midware.git](https://github.com/Hsieh-Yu-Hung/JWT_Midware.git)
 
 ### 📦 Core 模組
 
@@ -81,12 +100,17 @@ JWT_Authentication/
 - **auth_routes.py**: 認證路由（註冊、登入/登出、個人資料、帳戶切換、管理員功能）
 - **新增 JWT 管理端點**: `/admin/jwt/blacklist`、`/admin/jwt/cleanup`
 
-### 🛠️ Utils 模組
+### 🛠️ Utils Functions 模組
+
+utils/ 底下是 utils Function，目前只有 token_cleaner 這個功能：
 
 - **token_cleaner/**: JWT Token 清理 Function（適用於 Function Compute 環境）
   - **cleanup_function.py**: 主要清理邏輯
-  - **deploy_container.py**: Python 容器化部署腳本
   - **deploy_container.sh**: Shell 容器化部署腳本
+  - **Dockerfile**: Docker 映像檔配置
+  - **fc-config.json**: Function Compute 配置檔案
+  - **requirements.txt**: 依賴套件
+  - **test_cleanup.py**: 測試腳本
   - **README.md**: 詳細使用說明
 
 ### 🔑 GenerateSecret 模組
@@ -155,7 +179,43 @@ JWT_Authentication/
 > - **未來所有訪問都將使用內網地址**
 > - 請確保您的應用程式配置為使用內網地址進行生產環境部署
 
-## 🛠️ 安裝與啟動
+## 🚀 專案轉移
+
+### 1. 複製專案
+
+```bash
+git clone git@github.com:Hsieh-Yu-Hung/JWT_Functions.git
+cd JWT_Functions
+```
+
+### 2. 取得環境變數檔案
+
+```bash
+# 取得主專案的 .env 檔案，放在專案根目錄
+# 請聯繫專案管理員取得 .env 檔案
+```
+
+### 3. 取得 Utils Functions 環境變數
+
+```bash
+# 取得各個 utils Function 的 .env.local 檔案
+# 放在各個 utils Function 目錄底下
+
+# 例如：utils/token_cleaner/.env.local
+# 請聯繫專案管理員取得對應的 .env.local 檔案
+```
+
+### 4. 按照安裝與啟動流程安裝
+
+請參考下方 [🛠️ 安裝與啟動](##🛠️安裝與啟動) 章節進行安裝。
+
+### 5. Utils Functions 安裝與啟動
+
+各個 utils Function 的安裝與啟動請參考各個 utils Function 的 README：
+
+- **token_cleaner**: 請參考 `utils/token_cleaner/README.md`
+
+## 🛠️安裝與啟動
 
 ### 1. 安裝依賴
 
@@ -180,7 +240,6 @@ DB_NAME="資料庫名稱"
 ACR_USERNAME="ACR帳戶"
 ACR_PASSWORD="ACR密碼"
 
-
 # JWT 設定
 JWT_SECRET_KEY="請生成JWT密碼或是繼承自此專案的"
 ```
@@ -189,7 +248,7 @@ JWT_SECRET_KEY="請生成JWT密碼或是繼承自此專案的"
 
 ```bash
 # Docker 部署到 Function Compute (自動化腳本)
-bash deploy.sh
+bash scripts/deploy.sh
 ```
 
 ### 4. 測試 JWT Auth Middleware 套件
@@ -198,6 +257,49 @@ bash deploy.sh
 # 確保服務正在運行
 python tests/test_jwt_middleware.py
 ```
+
+## ⚠️ 部署注意事項
+
+### 獨立部署架構
+
+- **主專案和 utils Function 是獨立部署**
+- 每個 utils Function 都有自己的部署配置和環境變數
+- 主專案和 utils Function 可以分別更新和部署
+
+### Utils Function 更新部署
+
+- **若 utils Function 有更新要記得部署**
+- 請參考各個 utils Function 的 README 進行部署
+- 部署前請確認環境變數檔案（.env.local）已正確設定
+
+### 部署檢查清單
+
+#### 主專案部署
+
+- [ ] 確認 `.env` 檔案已正確設定
+- [ ] 確認 `config/fc-config.json` 配置正確
+- [ ] 執行 `bash scripts/deploy.sh` 部署主專案
+
+#### Utils Function 部署
+
+- [ ] 確認 `utils/{function_name}/.env.local` 檔案已正確設定
+- [ ] 確認 `utils/{function_name}/fc-config.json` 配置正確
+- [ ] 參考對應的 README 進行部署
+
+### 常見部署問題
+
+1. **環境變數未設定**
+
+   - 確認 `.env` 和 `.env.local` 檔案存在且內容正確
+   - 檢查環境變數名稱是否與程式碼一致
+2. **配置檔案錯誤**
+
+   - 確認 `fc-config.json` 格式正確
+   - 檢查 ACR 認證資訊是否正確
+3. **部署權限問題**
+
+   - 確認阿里雲 CLI 認證已正確設定
+   - 檢查 Function Compute 服務權限
 
 ## 🚀 完整使用流程
 
@@ -420,14 +522,13 @@ ALIBABA_CLOUD_REGION="cn-shanghai"
 
 ```bash
 # 使用 Shell 腳本（推薦）
-./utils/token_cleaner/deploy.sh
+./utils/token_cleaner/deploy_container.sh
 
 # 自訂執行頻率
-./utils/token_cleaner/deploy.sh --cron "0 0 0 * * *"  # 每天午夜執行
-./utils/token_cleaner/deploy.sh --cron "0 */30 * * * *"  # 每30分鐘執行
+./utils/token_cleaner/deploy_container.sh --cron "0 0 0 * * *"  # 每天午夜執行
+./utils/token_cleaner/deploy_container.sh --cron "0 */30 * * * *"  # 每30分鐘執行
+```
 
-# 使用 Python 腳本
-python utils/token_cleaner/deploy.py --cron "0 0 * * * *"
 ```
 
 #### 3. 驗證部署
@@ -463,7 +564,7 @@ aliyun fc invoke-function \
   --function-name cleanup
 
 # 重新部署
-./utils/token_cleaner/deploy.sh
+./utils/token_cleaner/deploy_container.sh
 ```
 
 ### 詳細文件
