@@ -8,11 +8,6 @@ from core.config import (
     MONGODB_MIN_POOL_SIZE
 )
 
-print("MONGO_URI: ", MONGO_URI)
-print("DB_NAME: ", DB_NAME)
-print("MONGODB_MAX_POOL_SIZE: ", MONGODB_MAX_POOL_SIZE)
-print("MONGODB_MIN_POOL_SIZE: ", MONGODB_MIN_POOL_SIZE)
-
 logger = logging.getLogger(__name__)
 
 class MongoDBManager:

@@ -5,6 +5,16 @@ from database.database import db_manager
 import json
 from datetime import datetime
 from flask_cors import CORS
+import logging
+
+# 配置日誌系統
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # 輸出到控制台
+    ]
+)
 
 app = Flask(__name__)
 app.register_blueprint(auth_bp)
@@ -213,7 +223,7 @@ def init_db():
 try:
     init_db()
 except Exception as e:
-    print(f"⚠️ 初始化失敗: {e}")
+    print(f"⚠️ 初始化失敗.: {e}")
     print("📝 應用程式將繼續運行，資料庫將在需要時連接")
 
 # 為 Function Compute 添加全局變數
