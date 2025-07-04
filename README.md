@@ -185,8 +185,8 @@ utils/ 底下是 utils Function，目前只有 token_cleaner 這個功能：
 
 ### 部署環境
 
-- **內網地址**: https://jwt-autfunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run
-- **公網地址**: https://jwt-autfunctions-ypvdbtxjmv.cn-shanghai.fcapp.run
+- **內網地址**: https://jwt-autunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run
+- **公網地址**: https://jwt-autunctions-ypvdbtxjmv.cn-shanghai.fcapp.run
 
 > **⚠️ 重要說明**:
 >
@@ -714,21 +714,21 @@ ALGORITHM = "HS256"                # 簽署演算法
 ### 1. 查看系統統計
 
 ```bash
-curl -X GET https://jwt-autfunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/admin/blacklist-stats \
+curl -X GET https://jwt-autunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/admin/blacklist-stats \
   -H "Authorization: Bearer ADMIN_JWT_TOKEN"
 ```
 
 ### 2. 手動清理過期 token
 
 ```bash
-curl -X POST https://jwt-autfunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/admin/cleanup-tokens \
+curl -X POST https://jwt-autunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/admin/cleanup-tokens \
   -H "Authorization: Bearer ADMIN_JWT_TOKEN"
 ```
 
 ### 3. 查看所有使用者
 
 ```bash
-curl -X GET https://jwt-autfunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/admin/users \
+curl -X GET https://jwt-autunctions-ypvdbtxjmv.cn-shanghai-vpc.fcapp.run/auth/admin/users \
   -H "Authorization: Bearer ADMIN_JWT_TOKEN"
 ```
 

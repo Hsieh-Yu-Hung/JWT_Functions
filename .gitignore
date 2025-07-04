@@ -87,3 +87,4 @@ Thumbs.db
 
 # Package
 package/
+tests/test_results_*.json
