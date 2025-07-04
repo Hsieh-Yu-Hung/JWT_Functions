@@ -1,7 +1,7 @@
 {
   "function": {
     "name": "jwt-token-cleaner",
-    "description": "JWT Token 定期清理服務",
+    "description": "JWT Token 定期清理服務 - 使用 jwt_auth_middleware 套件",
     "runtime": "custom-container",
     "handler": "cleanup_function.handler",
     "timeout": 60,
@@ -28,6 +28,8 @@
   "region": "cn-shanghai",
   "environmentVariables": {
     "PYTHONPATH": "/app",
-    "FLASK_ENV": "production"
+    "FLASK_ENV": "production",
+    "JWT_SECRET_KEY": "your-jwt-secret-key-here",
+    "CONFIG_FILE": "config.yaml"
   }
 } 

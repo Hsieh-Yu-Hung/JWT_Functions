@@ -1,13 +1,16 @@
 # JWT Token Cleaner
 
 JWT Token 清理 Function，專為阿里雲 Function Compute 環境設計的獨立清理服務。
+**現在使用 jwt_auth_middleware 套件，提供更強大的清理功能和統計資訊。**
 
 ## 🎯 功能特色
 
+- ✅ **套件整合**: 使用 jwt_auth_middleware 套件，提供統一的 API
+- ✅ **智能備用方案**: 套件不可用時自動切換到 pymongo 備用方案
+- ✅ **詳細統計**: 提供總 token 數、過期 token 數、有效 token 數等詳細統計
 - ✅ **獨立部署**: 與主服務分離，不影響主服務性能
 - ✅ **定時觸發**: 支援 Cron 表達式設定執行頻率
 - ✅ **記憶體優化**: 自動清理過期 Token，節省記憶體使用
-- ✅ **詳細統計**: 提供清理結果和記憶體使用統計
 - ✅ **錯誤處理**: 完善的錯誤處理和日誌記錄
 - ✅ **自動化部署**: 提供 Python 和 Shell 兩種部署腳本
 - ✅ **容器化支援**: 支援 Docker 容器化部署，更穩定可靠
@@ -17,7 +20,8 @@ JWT Token 清理 Function，專為阿里雲 Function Compute 環境設計的獨�
 ```
 utils/token_cleaner/
 ├── __init__.py              # 模組初始化
-├── cleanup_function.py      # 主要清理邏輯
+├── cleanup_function.py      # 主要清理邏輯（使用套件）
+├── app.py                   # Flask 應用（HTTP 服務）
 ├── deploy_container.sh     # Shell 容器化部署腳本（推薦）
 ├── Dockerfile              # Docker 建構檔案
 ├── requirements.txt        # Python 依賴套件
@@ -56,18 +60,15 @@ pip install -r requirements.txt
 編輯 `.env`.local 檔案，填入實際的配置值：
 
 ```bash
-# MongoDB 登入
-DB_ACCOUNT="資料庫帳戶"
-DB_PASSWORD="資料庫密碼"
-DB_URI="資料庫URI"
-DB_NAME="資料庫名稱"
+# JWT 設定（必要）
+JWT_SECRET_KEY="請生成JWT密碼或是繼承自此專案的"
+
+# 配置檔案（可選，有預設值）
+CONFIG_FILE="config.yaml"
 
 # 映像存放倉庫
 ACR_USERNAME="ACR帳戶"
 ACR_PASSWORD="ACR密碼"
-
-# JWT 設定
-JWT_SECRET_KEY="請生成JWT密碼或是繼承自此專案的"
 ```
 
 ### 5. 啟動服務
@@ -108,8 +109,12 @@ pip install aliyun-cli
 在 `.env` 檔案中設定必要的環境變數：
 
 ```bash
-# JWT 設定
+# JWT 設定（必要）
 JWT_SECRET_KEY="your-jwt-secret-key"
+
+# MongoDB API 設定（可選）
+MONGODB_API_URL="https://db-operation-xbbbehjawk.cn-shanghai-vpc.fcapp.run"
+BLACKLIST_COLLECTION="jwt_blacklist"
 
 # 阿里雲認證
 ALIBABA_CLOUD_ACCESS_KEY_ID="your-access-key-id"
@@ -120,7 +125,7 @@ ALIBABA_CLOUD_REGION="cn-shanghai"
 ACR_USERNAME="your-acr-username"
 ACR_PASSWORD="your-acr-password"
 
-# 資料庫設定（可選）
+# 備用方案：資料庫設定（可選）
 DB_ACCOUNT="your-db-account"
 DB_PASSWORD="your-db-password"
 DB_URI="your-db-uri"
@@ -190,11 +195,12 @@ python utils/token_cleaner/test_cleanup.py
 
 ### 清理邏輯
 
-1. **初始化檢查**: 驗證環境變數和 JWT Manager
-2. **資料庫連接**: 嘗試連接 MongoDB（可選）
-3. **執行清理**: 調用 JWT Manager 的清理方法
-4. **統計計算**: 計算清理結果和記憶體節省
-5. **日誌記錄**: 記錄詳細的執行結果
+1. **套件檢查**: 優先使用 jwt_auth_middleware 套件
+2. **備用方案**: 套件不可用時自動切換到 pymongo
+3. **初始化檢查**: 驗證環境變數和配置
+4. **執行清理**: 調用套件的清理方法或備用方案
+5. **統計計算**: 計算清理結果和記憶體節省
+6. **日誌記錄**: 記錄詳細的執行結果
 
 ### 回應格式
 
@@ -250,10 +256,6 @@ python utils/token_cleaner/test_cleanup.py
 | `ALIBABA_CLOUD_ACCESS_KEY_ID`     | ✅   | 阿里雲 Access Key ID     |
 | `ALIBABA_CLOUD_ACCESS_KEY_SECRET` | ✅   | 阿里雲 Access Key Secret |
 | `ALIBABA_CLOUD_REGION`            | ✅   | 阿里雲區域               |
-| `DB_ACCOUNT`                      | ❌   | 資料庫帳戶               |
-| `DB_PASSWORD`                     | ❌   | 資料庫密碼               |
-| `DB_URI`                          | ❌   | 資料庫 URI               |
-| `DB_NAME`                         | ❌   | 資料庫名稱               |
 
 ## 🛠️ 本地測試
 

@@ -2,7 +2,7 @@
 """
 JWT Token 清理邏輯模組
 
-提供 TokenCleaner 類別與 cleanup_tokens() 供 Flask app 或 CLI 使用
+使用 jwt_auth_middleware 套件提供 TokenCleaner 類別與 cleanup_tokens() 供 Flask app 或 CLI 使用
 """
 
 import os
@@ -16,55 +16,65 @@ try:
 except ImportError:
     print("❌ 缺少 dotenv 模組")
 
-# 嘗試導入 pymongo
+# 導入 jwt_auth_middleware 套件
 try:
-    from pymongo import MongoClient
-    from urllib.parse import quote_plus
-    PYMONGO_AVAILABLE = True
+    from jwt_auth_middleware import (
+        cleanup_expired_blacklist_tokens,
+        get_blacklist_statistics,
+        JWTConfig,
+        set_jwt_config
+    )
+    JWT_MIDDLEWARE_AVAILABLE = True
 except ImportError:
-    PYMONGO_AVAILABLE = False
+    JWT_MIDDLEWARE_AVAILABLE = False
+    print("❌ jwt_auth_middleware 套件不可用")
 
 class TokenCleaner:
-    """JWT Token 清理器"""
+    """JWT Token 清理器 - 使用 jwt_auth_middleware 套件"""
     def __init__(self):
         self.initialized = False
-        self.client = None
-        self.db = None
+        self.jwt_config = None
     
     def initialize(self) -> bool:
         try:
+            # 檢查必要的環境變數
             if not os.environ.get('JWT_SECRET_KEY'):
                 print("❌ 缺少 JWT_SECRET_KEY 環境變數")
                 return False
-            db_vars = ['DB_ACCOUNT', 'DB_PASSWORD', 'DB_URI', 'DB_NAME']
-            missing_vars = [var for var in db_vars if not os.environ.get(var)]
-            if missing_vars:
-                print(f"⚠️ 缺少資料庫環境變數: {', '.join(missing_vars)}")
-                print("📝 將跳過資料庫操作")
-                self.initialized = True
-                return True
-            if PYMONGO_AVAILABLE:
-                try:
-                    db_account = os.environ['DB_ACCOUNT']
-                    db_password = os.environ['DB_PASSWORD']
-                    db_uri = os.environ['DB_URI']
-                    db_name = os.environ['DB_NAME']
-                    encoded_username = quote_plus(db_account)
-                    encoded_password = quote_plus(db_password)
-                    mongo_uri = f"mongodb://{encoded_username}:{encoded_password}@{db_uri}"
-                    self.client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
-                    self.db = self.client[db_name]
-                    self.client.admin.command('ping')
-                    print("✅ 資料庫連接成功")
-                except Exception as e:
-                    print(f"⚠️ 資料庫連接失敗: {e}")
-                    print("📝 將繼續執行清理，但可能無法獲取完整統計")
-            else:
-                print("📝 pymongo 不可用，跳過資料庫操作")
-            self.initialized = True
-            return True
+            
+            # 檢查套件是否可用
+            if not JWT_MIDDLEWARE_AVAILABLE:
+                print("❌ jwt_auth_middleware 套件不可用")
+                return False
+            
+            return self._initialize_with_middleware()
+                
         except Exception as e:
             print(f"❌ 初始化失敗: {e}")
+            return False
+    
+    def _initialize_with_middleware(self) -> bool:
+        """使用 jwt_auth_middleware 套件初始化"""
+        try:
+            # 從環境變數獲取配置
+            secret_key = os.environ.get('JWT_SECRET_KEY')
+            config_file = os.environ.get('CONFIG_FILE', 'config.yaml')
+            
+            # 建立 JWT 配置
+            self.jwt_config = JWTConfig(
+                secret_key=secret_key,
+                config_file=config_file
+            )
+            
+            # 設定全域配置
+            set_jwt_config(self.jwt_config)
+            
+            print("✅ 使用 jwt_auth_middleware 套件初始化成功")
+            self.initialized = True
+            return True
+            
+        except Exception as e:
+            print(f"❌ jwt_auth_middleware 初始化失敗: {e}")
             return False
     
     def cleanup_tokens(self) -> Dict[str, Any]:
@@ -76,35 +86,61 @@ class TokenCleaner:
                     "cleaned_count": 0,
                     "timestamp": datetime.now().isoformat()
                 }
+        
         try:
             cleaned_count = 0
-            if self.db is not None:
+            remaining_tokens = 0
+            total_tokens = 0
+            expired_tokens = 0
+            
+            # 使用套件功能
+            if JWT_MIDDLEWARE_AVAILABLE and self.jwt_config:
                 try:
-                    collection = self.db["blacklist"]
-                    result = collection.delete_many({
-                        "expires_at": {"$lt": datetime.now(UTC)}
-                    })
-                    cleaned_count = result.deleted_count
-                    print(f"✅ 資料庫清理完成，清理了 {cleaned_count} 個過期記錄")
+                    # 使用套件的清理功能
+                    cleaned_count = cleanup_expired_blacklist_tokens()
+                    
+                    # 取得統計資訊
+                    stats = get_blacklist_statistics()
+                    remaining_tokens = stats.get('active_tokens', 0)
+                    total_tokens = stats.get('total_tokens', 0)
+                    expired_tokens = stats.get('expired_tokens', 0)
+                    
+                    print("cleaned_count", cleaned_count)
+                    print("remaining_tokens", remaining_tokens)
+                    print("total_tokens", total_tokens)
+                    print("expired_tokens", expired_tokens)
+                    print(f"✅ 套件清理完成，清理了 {cleaned_count} 個過期記錄")
+                    
                 except Exception as e:
-                    print(f"⚠️ 資料庫清理失敗: {e}")
+                    print(f"❌ 套件清理失敗: {e}")
                     cleaned_count = 0
             else:
-                print("📝 資料庫不可用，跳過資料庫清理")
+                print("❌ jwt_auth_middleware 套件不可用")
+                return {
+                    "success": False,
+                    "error": "jwt_auth_middleware 套件不可用",
+                    "cleaned_count": 0,
+                    "timestamp": datetime.now().isoformat()
+                }
+            
             memory_saved = self._calculate_memory_saved(cleaned_count)
             result = {
                 "success": True,
                 "cleaned_count": cleaned_count,
-                "remaining_tokens": 0,
+                "remaining_tokens": remaining_tokens,
+                "total_tokens": total_tokens,
+                "expired_tokens": expired_tokens,
                 "estimated_memory_usage": 0,
                 "memory_saved_bytes": memory_saved,
                 "memory_saved_mb": round(memory_saved / (1024 * 1024), 2),
                 "timestamp": datetime.now().isoformat(),
                 "execution_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                "message": f"清理完成，共清理 {cleaned_count} 個過期 token"
+                "message": f"清理完成，共清理 {cleaned_count} 個過期 token",
+                "method": "jwt_auth_middleware"
             }
             self._log_cleanup_result(result)
             return result
+            
         except Exception as e:
             error_result = {
                 "success": False,
@@ -114,26 +150,28 @@ class TokenCleaner:
             }
             print(f"❌ 清理過程發生錯誤: {e}")
             return error_result
+    
     def _calculate_memory_saved(self, cleaned_count: int) -> int:
         avg_token_size = 500
         return cleaned_count * avg_token_size
+    
     def _log_cleanup_result(self, result: Dict[str, Any]):
         if result["success"]:
             print(f"✅ 清理完成：")
             print(f"   - 清理了 {result['cleaned_count']} 個過期 token")
+            print(f"   - 剩餘有效 token: {result['remaining_tokens']}")
+            print(f"   - 總 token 數: {result['total_tokens']}")
             print(f"   - 預估節省記憶體：{result['memory_saved_mb']} MB")
             print(f"   - 執行時間：{result['execution_time']}")
+            print(f"   - 使用方法：{result.get('method', 'unknown')}")
         else:
             print(f"❌ 清理失敗：{result.get('error', '未知錯誤')}")
-    def __del__(self):
-        if self.client:
-            try:
-                self.client.close()
-            except:
-                pass
 
+# 全域實例
 token_cleaner = TokenCleaner()
+
 def cleanup_tokens() -> Dict[str, Any]:
+    """清理過期 tokens 的主要函數"""
     return token_cleaner.cleanup_tokens()
 
 if __name__ == "__main__":

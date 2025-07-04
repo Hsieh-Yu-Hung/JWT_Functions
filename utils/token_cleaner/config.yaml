@@ -1,0 +1,30 @@
+# JWT 認證中間件配置檔案
+jwt:
+  # JWT 演算法
+  algorithm: HS256
+  
+  # Token 過期時間（分鐘）
+  access_token_expires: 120
+  refresh_token_expires: 1440
+
+api:
+  # API 模式：internal（內網）或 public（公網）
+  mode: public
+
+mongodb:
+  # MongoDB API URLs
+  internal_api_url: https://db-operation-xbbbehjawk.cn-shanghai-vpc.fcapp.run
+  public_api_url: https://db-operation-xbbbehjawk.cn-shanghai.fcapp.run
+  
+  # 黑名單相關配置
+  blacklist:
+    collection: jwt_blacklist
+    enabled: true
+
+# 其他配置選項
+app:
+  # 是否載入 .env 檔案（預設為 true）
+  load_dotenv: true
+  
+  # 除錯模式
+  debug: false 
