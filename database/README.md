@@ -11,7 +11,7 @@
 - ✅ **API 驅動架構**: 所有操作透過 MongoDB Operation API 進行
 - ✅ **統一 API 管理器**: 集中處理所有 API 請求
 - ✅ **動態 API 切換**: 支援公網/內網 API 的環境變數切換
-- ✅ **向後相容性**: 保留原有的 MongoDB 連接器作為備用
+- ✅ **API 優先架構**: 完全基於 API 的資料庫操作
 - ✅ **更好的錯誤處理**: 統一的 API 錯誤處理機制
 
 ## 架構概覽
@@ -25,7 +25,7 @@ database/
 ├── user_role_mapping_model.py     # 用戶角色映射模型（已更新為使用 API）
 ├── blacklist_model.py             # 黑名單模型（已更新為使用 API）
 # 基礎模型類別已移除（改為使用 API 架構）
-├── database.py                    # 資料庫連接管理（備用）
+├── api_manager.py                 # API 管理器
 └── README.md                      # 本文件
 ```
 
@@ -189,8 +189,8 @@ cleaned_count = blacklist_model.cleanup_expired_tokens()
 **⚠️ 重要**: 所有 API 相關的環境變數都是必需的，如果未設定會導致應用程式啟動失敗。
 
 ```bash
-# API 模式選擇（必需）
-API_MODE=internal  # 或 "public"
+# API 模式選擇（現在在 config.yaml 中設定）
+# 請修改 config.yaml 中的 api.mode 設定為 "internal" 或 "public"
 
 # 公網 API 配置（必需）
 PUBLIC_API_BASE_URL=https://api.example.com
@@ -325,23 +325,9 @@ except Exception as e:
     print(f"API 連接失敗: {e}")
 ```
 
-## 向後相容性
+## 架構說明
 
-### 切換回直接 MongoDB 連接
-
-如果需要切換回直接 MongoDB 連接，請：
-
-1. **移除 API 相關環境變數**
-2. **確保 MongoDB 環境變數正確設定**
-3. **重新實作模型類別以直接連接 MongoDB**
-
-```python
-# 原有的 MongoDB 配置
-DB_ACCOUNT=your_db_account
-DB_PASSWORD=your_db_password
-DB_URI=your_db_uri
-DB_NAME=your_db_name
-```
+本專案已完全遷移到 API 架構，不再支援直接 MongoDB 連接。所有資料庫操作都透過 MongoDB Operation API 進行，確保了更好的可擴展性和維護性。
 
 ## 最佳實踐
 

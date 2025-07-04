@@ -14,7 +14,7 @@ from datetime import datetime
 # 添加專案根目錄到 Python 路徑
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.config import API_BASE_URL, API_KEY
+from database.config import API_BASE_URL, API_KEY
 
 def test_api_directly():
     """直接測試 API"""

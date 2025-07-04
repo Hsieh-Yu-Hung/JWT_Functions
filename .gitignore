@@ -68,6 +68,9 @@ coverage.xml
 .env.test.local
 .env.production.local
 
+# 允許提交非敏感配置檔案
+!config.yaml
+
 # Function Compute configuration files
 temp_update_body.json
 

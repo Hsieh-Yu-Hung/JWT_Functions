@@ -1,9 +1,25 @@
 import os
+import yaml
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
 
 # 載入 .env 檔案
 load_dotenv()
+
+# 載入 config.yaml 檔案
+def load_config():
+    """載入 config.yaml 配置檔案"""
+    config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.yaml')
+    try:
+        with open(config_path, 'r', encoding='utf-8') as file:
+            return yaml.safe_load(file)
+    except FileNotFoundError:
+        raise ValueError(f"配置檔案 {config_path} 不存在")
+    except yaml.YAMLError as e:
+        raise ValueError(f"配置檔案格式錯誤: {e}")
+
+# 載入配置
+config = load_config()
 
 # JWT 配置
 SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
@@ -13,14 +29,14 @@ if not SECRET_KEY:
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 720
 
-# API 配置 - 選擇使用公網或內網 API
-API_MODE = os.environ.get("API_MODE")
+# API 配置 - 從 config.yaml 讀取 API 模式
+API_MODE = config.get('api', {}).get('mode')
 if not API_MODE:
-    raise ValueError("API_MODE environment variable is required. Please set it in your .env file (internal or public)")
+    raise ValueError("API_MODE is required in config.yaml file (internal or public)")
 API_MODE = API_MODE.lower()
 
 if API_MODE not in ["internal", "public"]:
-    raise ValueError("API_MODE must be either 'internal' or 'public'. Please check your .env file")
+    raise ValueError("API_MODE must be either 'internal' or 'public'. Please check your config.yaml file")
 
 # 公網 API 配置
 PUBLIC_API_BASE_URL = os.environ.get("PUBLIC_API_BASE_URL")
@@ -50,7 +66,7 @@ elif API_MODE == "internal":
     API_KEY = INTERNAL_API_KEY
     print(f"🏠 使用內網 API: {API_BASE_URL}")
 else:
-    raise ValueError("API_MODE must be either 'internal' or 'public'. Please check your .env file")
+    raise ValueError("API_MODE must be either 'internal' or 'public'. Please check your config.yaml file")
 
 # MongoDB 配置（保留原有配置以備用）
 DB_ACCOUNT = os.environ.get("DB_ACCOUNT")
@@ -75,4 +91,4 @@ MONGODB_USERS_COLLECTION = "users"
 
 # 資料庫連接池配置
 MONGODB_MAX_POOL_SIZE = int(os.environ.get("MONGODB_MAX_POOL_SIZE", "10"))
-MONGODB_MIN_POOL_SIZE = int(os.environ.get("MONGODB_MIN_POOL_SIZE", "1"))
+MONGODB_MIN_POOL_SIZE = int(os.environ.get("MONGODB_MIN_POOL_SIZE", "1")) 

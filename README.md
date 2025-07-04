@@ -7,6 +7,7 @@
 ### 主要改進：
 
 - ✅ 使用標準化的 JWT Auth Middleware 套件
+- ✅ **新的配置系統**：分離敏感和非敏感配置
 - ✅ 自動 Token 黑名單管理
 - ✅ 內建 Token 清理機制
 - ✅ 更好的錯誤處理和日誌記錄
@@ -32,7 +33,7 @@ JWT_Functions/
 │   ├── __init__.py              # 模組初始化
 │   ├── api_manager.py           # API 管理器（新增）
 │   # 基礎模型類別已移除（改為使用 API 架構）
-│   ├── database.py              # 資料庫連接管理（備用）
+│   ├── api_manager.py           # API 管理器
 │   ├── blacklist_model.py       # Token 黑名單模型（已更新為使用 API）
 │   ├── role_model.py            # 使用者角色模型（已更新為使用 API）
 │   ├── user_model.py            # 使用者模型（已更新為使用 API）
@@ -84,7 +85,8 @@ JWT_Functions/
 
 ### 🔐 JWT Auth Middleware 套件
 
-- **JWTManager**: 核心 JWT 管理類別，提供 Token 建立、驗證、撤銷功能
+- **JWTConfig**: 新的配置系統，支援分離敏感和非敏感配置
+- **set_jwt_config**: 設定全域 JWT 配置
 - **token_required**: 裝飾器，用於保護需要認證的端點
 - **自動黑名單管理**: 內建 Token 黑名單功能
 - **多演算法支援**: 支援 HS256演算法
@@ -102,7 +104,7 @@ JWT_Functions/
 ### 🗄️ Database 模組
 
 - **api_manager.py**: API 管理器，統一處理與 MongoDB Operation API 的通信
-- **database.py**: MongoDB 連接池與錯誤處理（備用）
+- **api_manager.py**: API 管理器，用於與 MongoDB Operation API 通信
 - **blacklist_model.py**: Token 黑名單資料操作（已更新為使用 API）
 - **role_model.py**: 角色權限管理、啟用/停用、權限驗證（已更新為使用 API）
 - **user_model.py**: 使用者管理、註冊、登入、密碼驗證（已更新為使用 API）
@@ -199,8 +201,11 @@ utils/ 底下是 utils Function，目前只有 token_cleaner 這個功能：
 本專案支援透過環境變數選擇使用公網或內網的 MongoDB Operation API。**所有 API 相關的環境變數都是必需的**，如果未設定會導致應用程式啟動失敗。
 
 ```bash
-# API 模式選擇（必需）
-API_MODE=internal  # 或 "public"
+# JWT 密鑰（必需）
+JWT_SECRET_KEY=your_super_secret_jwt_key_here_make_it_long_and_random
+
+# API 模式選擇（現在在 config.yaml 中設定）
+# 請修改 config.yaml 中的 api.mode 設定為 "internal" 或 "public"
 
 # 公網 API 配置（必需）
 PUBLIC_API_BASE_URL=https://api.example.com
@@ -211,7 +216,10 @@ INTERNAL_API_BASE_URL=http://localhost:8000
 INTERNAL_API_KEY=your_internal_api_key_here
 ```
 
-**⚠️ 重要**: 所有 API 相關的環境變數都必須在 `.env` 檔案中正確設定，否則應用程式會啟動失敗並顯示相應的錯誤訊息。
+**⚠️ 重要**: 
+- **JWT_SECRET_KEY** 必須在 `.env` 檔案中正確設定，否則應用程式會啟動失敗
+- 所有 API 相關的環境變數都必須在 `.env` 檔案中正確設定，否則應用程式會啟動失敗並顯示相應的錯誤訊息
+- 請確保 JWT_SECRET_KEY 是強密鑰（至少 32 字元），並妥善保管
 
 ### 測試 API 配置
 
@@ -287,22 +295,68 @@ pip install -r requirements.txt
 
 ### 4. 設定環境變數
 
-編輯 `.env` 檔案，填入實際的配置值：
+#### 4.1 複製環境變數範例檔案
 
 ```bash
-# MongoDB 登入
-DB_ACCOUNT="資料庫帳戶"
-DB_PASSWORD="資料庫密碼"
-DB_URI="資料庫URI"
-DB_NAME="資料庫名稱"
-
-# 映像存放倉庫
-ACR_USERNAME="ACR帳戶"
-ACR_PASSWORD="ACR密碼"
-
-# JWT 設定
-JWT_SECRET_KEY="請生成JWT密碼或是繼承自此專案的"
+cp env.example .env
 ```
+
+#### 4.2 編輯 `.env` 檔案，填入實際的配置值：
+
+```bash
+# JWT 密鑰（必須設定，至少 32 字元）
+JWT_SECRET_KEY=your_super_secret_jwt_key_here_make_it_long_and_random
+
+# API 模式配置（現在在 config.yaml 中設定）
+# 請修改 config.yaml 中的 api.mode 設定為 "internal" 或 "public"
+
+# 公網 API 配置
+PUBLIC_API_BASE_URL=https://your-public-api.com
+PUBLIC_API_KEY=your_public_api_key
+
+# 內網 API 配置
+INTERNAL_API_BASE_URL=https://your-internal-api.com
+INTERNAL_API_KEY=your_internal_api_key
+
+# MongoDB 配置
+DB_ACCOUNT=your_db_account
+DB_PASSWORD=your_db_password
+DB_URI=your_db_uri
+DB_NAME=your_db_name
+
+# MongoDB 連接池配置（可選）
+MONGODB_MAX_POOL_SIZE=10
+MONGODB_MIN_POOL_SIZE=1
+```
+
+**⚠️ 重要**: 如果沒有設定 `JWT_SECRET_KEY`，應用程式會啟動失敗並顯示錯誤訊息。
+
+#### 4.3 配置檔案說明
+
+- **敏感配置**：存放在 `.env` 檔案中（如 JWT 密鑰、API 金鑰等）
+- **非敏感配置**：存放在 `config.yaml` 檔案中（如演算法、過期時間、API 模式等）
+- **config.yaml**：可以安全地提交到版本控制
+
+#### 4.4 API 模式設定
+
+API 模式現在在 `config.yaml` 檔案中設定：
+
+```yaml
+# API 模式配置
+api:
+  # API 模式選擇 (internal 或 public)
+  mode: internal  # 可選值: internal, public
+```
+
+**可選值說明：**
+- `internal`：使用內網 API（適用於內部部署）
+- `public`：使用公網 API（適用於外部部署）
+
+**修改方式：**
+1. 編輯 `config.yaml` 檔案
+2. 找到 `api.mode` 設定
+3. 將值改為 `internal` 或 `public`
+4. 重新啟動應用程式
 
 ### 5. 啟動服務
 
@@ -776,7 +830,7 @@ app.py
 │   └── database.role_model
 ├── middleware.jwt_middleware
 │   └── core.jwt_utils
-└── database.database
+└── database.api_manager
     └── core.config
 ```
 

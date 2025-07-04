@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
-from jwt_auth_middleware import JWTManager, token_required
+from jwt_auth_middleware import JWTConfig, set_jwt_config, token_required, revoke_token
 from routes.auth_routes import auth_bp
-from database.database import db_manager
+from database.api_manager import api_manager
 import json
 from datetime import datetime
 from flask_cors import CORS
 import logging
+import os
+from dotenv import load_dotenv
 
 # 配置日誌系統
 logging.basicConfig(
@@ -20,9 +22,42 @@ app = Flask(__name__)
 app.register_blueprint(auth_bp)
 CORS(app)
 
-# 初始化 JWT Manager
-jwt_manager = JWTManager()
-jwt_manager.init_app(app)
+# 初始化 JWT 系統
+def initialize_jwt_system():
+    """初始化 JWT 系統"""
+    # 載入 .env 檔案
+    load_dotenv()
+    
+    # 從環境變數獲取密鑰
+    secret_key = os.getenv('JWT_SECRET_KEY')
+    if not secret_key:
+        raise ValueError("錯誤：未在 .env 檔案中找到 JWT_SECRET_KEY 環境變數，請確保已正確設定")
+    
+    # 創建 JWT 配置，使用 config.yaml 檔案
+    config = JWTConfig(
+        secret_key=secret_key,
+        config_file="config.yaml"  # 使用配置檔案
+    )
+    
+    # 設定全域配置
+    set_jwt_config(config)
+    
+    print(f"JWT 系統已初始化")
+    print(f"演算法: {config.algorithm}")
+    print(f"Access Token 過期時間: {config.access_token_expires} 分鐘")
+    print(f"Refresh Token 過期時間: {config.refresh_token_expires} 分鐘")
+    print(f"啟用黑名單: {config.enable_blacklist}")
+
+# 初始化 JWT 系統
+try:
+    initialize_jwt_system()
+except ValueError as e:
+    print(f"❌ JWT 系統初始化失敗: {e}")
+    print("💡 請確保 .env 檔案存在且包含 JWT_SECRET_KEY 變數")
+    exit(1)
+except Exception as e:
+    print(f"❌ JWT 系統初始化時發生未知錯誤: {e}")
+    exit(1)
 
 @app.route('/protected')
 @token_required
@@ -40,13 +75,15 @@ def protected(current_user):
 def health():
     """健康檢查端點"""
     try:
-        # 檢查資料庫連接狀態
-        db_status = "connected" if db_manager.is_connected() else "disconnected"
-
-        if db_status == "disconnected":
-            print("⚠️ MongoDB 連接失敗")
+        # 檢查 API 服務狀態
+        api_health = api_manager.health_check()
+        
+        if api_health.get("success"):
+            db_status = "connected"
+            print("🗄️ API 服務連接正常")
         else:
-            print("🗄️ MongoDB 連接已建立")
+            db_status = "disconnected"
+            print(f"⚠️ API 服務連接失敗: {api_health.get('message', 'Unknown error')}")
         
         return jsonify({
             "status": "healthy",
@@ -54,7 +91,8 @@ def health():
             "environment": "function-compute",
             "version": "1.0.0",
             "database": db_status,
-            "jwt_middleware": "enabled"
+            "jwt_middleware": "enabled",
+            "api_status": api_health
         }), 200
     except Exception as e:
         return jsonify({
@@ -118,7 +156,6 @@ def add_to_blacklist(current_user):
         if not token:
             return jsonify({"error": "Token is required"}), 400
         
-        from jwt_auth_middleware import revoke_token
         revoke_token(token)
         return jsonify({"message": "Token revoked successfully"})
     except Exception as e:
@@ -206,17 +243,18 @@ def handler(event, context):
         }
 
 def init_db():
-    """初始化資料庫連接"""
-    print("🚀 嘗試初始化資料庫連接...")
+    """初始化 API 服務連接"""
+    print("🚀 嘗試初始化 API 服務連接...")
     try:
-        # 嘗試連接資料庫，但不強制要求成功
-        success = db_manager.connect()
-        if success:
-            print("✅ 資料庫連接初始化成功")
+        # 嘗試連接 API 服務，但不強制要求成功
+        api_health = api_manager.health_check()
+        if api_health.get("success"):
+            print("✅ API 服務連接初始化成功")
         else:
-            print("⚠️ 資料庫連接初始化失敗，將在需要時重試")
+            print(f"⚠️ API 服務連接初始化失敗: {api_health.get('message', 'Unknown error')}")
+            print("📝 這在本地測試環境是正常的，部署到 Function Compute 時會自動連接")
     except Exception as e:
-        print(f"⚠️ 資料庫連接初始化失敗: {e}")
+        print(f"⚠️ API 服務連接初始化失敗: {e}")
         print("📝 這在本地測試環境是正常的，部署到 Function Compute 時會自動連接")
 
 # 冷啟動時嘗試初始化資料庫（非阻塞）
@@ -238,6 +276,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("\n🛑 正在停止服務...")
     finally:
-        # 關閉資料庫連接
-        db_manager.close()
         print("✅ 服務已停止")

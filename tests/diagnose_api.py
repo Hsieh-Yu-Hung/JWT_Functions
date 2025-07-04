@@ -14,7 +14,7 @@ from datetime import datetime
 # 添加專案根目錄到 Python 路徑
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.config import API_BASE_URL, API_KEY
+from database.config import API_BASE_URL, API_KEY
 from database.api_manager import APIManager
 
 def print_section(title):
@@ -41,10 +41,10 @@ def check_environment_variables():
     print_result(bool(API_KEY), f"API_KEY: {'已設定' if API_KEY else '未設定'}")
     
     if not API_BASE_URL or not API_KEY:
-        print("\n⚠️  請檢查 .env 檔案中的以下變數:")
-        print("   - API_MODE (internal 或 public)")
-        print("   - PUBLIC_API_BASE_URL 或 INTERNAL_API_BASE_URL")
-        print("   - PUBLIC_API_KEY 或 INTERNAL_API_KEY")
+        print("\n⚠️  請檢查配置:")
+        print("   - config.yaml 中的 api.mode (internal 或 public)")
+        print("   - .env 檔案中的 PUBLIC_API_BASE_URL 或 INTERNAL_API_BASE_URL")
+        print("   - .env 檔案中的 PUBLIC_API_KEY 或 INTERNAL_API_KEY")
 
 def test_api_connection():
     """測試 API 連接"""
@@ -184,10 +184,11 @@ def main():
     
     print_section("診斷完成")
     print("💡 如果發現問題，請檢查:")
-    print("   1. .env 檔案中的 API 配置")
-    print("   2. API 服務是否正在運行")
-    print("   3. 網路連接是否正常")
-    print("   4. API Key 是否有效")
+    print("   1. config.yaml 中的 api.mode 設定")
+    print("   2. .env 檔案中的 API 配置")
+    print("   3. API 服務是否正在運行")
+    print("   4. 網路連接是否正常")
+    print("   5. API Key 是否有效")
 
 if __name__ == "__main__":
     main() 

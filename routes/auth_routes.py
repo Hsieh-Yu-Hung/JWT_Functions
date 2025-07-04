@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
-from jwt_auth_middleware import verify_token, create_access_token, revoke_token
+from jwt_auth_middleware import verify_access_token, create_access_token, revoke_token
 from database.user_role_mapping_model import UserRoleMappingModel
 from database.user_model import UserModel
 
@@ -173,8 +173,8 @@ def get_profile():
         
         token = auth_header.split(" ")[1]
         
-        # 使用 verify_token 函數驗證 token
-        payload = verify_token(token)
+        # 使用 verify_access_token 函數驗證 token
+        payload = verify_access_token(token)
         
         # 從 token 中取得使用者 email
         email = payload.get("email")
@@ -228,7 +228,7 @@ def update_profile():
         token = auth_header.split(" ")[1]
         
         # 驗證 JWT token
-        payload = verify_token(token)
+        payload = verify_access_token(token)
         
         # 從 token 中取得使用者 email
         email = payload.get("email")

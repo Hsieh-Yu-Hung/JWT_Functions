@@ -82,12 +82,20 @@ class SystemTester:
         else:
             self.log_test("環境變數檢查", True, "所有必要的環境變數都已設定")
         
-        # 檢查 API 模式
-        api_mode = os.getenv("API_MODE")
-        if api_mode not in ["public", "internal"]:
-            self.log_test("API 模式檢查", False, f"API_MODE 必須是 'public' 或 'internal'，當前值: {api_mode}")
-        else:
-            self.log_test("API 模式檢查", True, f"API 模式設定為: {api_mode}")
+        # 檢查 API 模式（從 config.yaml 讀取）
+        try:
+            import yaml
+            config_path = os.path.join(os.path.dirname(__file__), '..', 'config.yaml')
+            with open(config_path, 'r', encoding='utf-8') as file:
+                config = yaml.safe_load(file)
+            
+            api_mode = config.get('api', {}).get('mode')
+            if api_mode not in ["public", "internal"]:
+                self.log_test("API 模式檢查", False, f"config.yaml 中的 api.mode 必須是 'public' 或 'internal'，當前值: {api_mode}")
+            else:
+                self.log_test("API 模式檢查", True, f"API 模式設定為: {api_mode}")
+        except Exception as e:
+            self.log_test("API 模式檢查", False, f"無法讀取 config.yaml 中的 API 模式: {str(e)}")
         
         # 檢查 API 網址格式
         public_url = os.getenv("PUBLIC_API_BASE_URL")
@@ -109,7 +117,7 @@ class SystemTester:
         print("-" * 40)
         
         try:
-            from core.config import API_MODE, API_BASE_URL, API_KEY
+            from database.config import API_MODE, API_BASE_URL, API_KEY
             
             self.log_test("配置載入", True, f"API 模式: {API_MODE}, 網址: {API_BASE_URL}")
             
@@ -269,13 +277,17 @@ class SystemTester:
         print("-" * 40)
         
         try:
-            from core.jwt_utils import JWTManager
-            jwt_manager = JWTManager()
-            self.log_test("JWT 管理器初始化", True, "")
+            # 測試新的 JWT 配置系統
+            from jwt_auth_middleware import JWTConfig, set_jwt_config, token_required
+            self.log_test("JWT 配置系統導入", True, "")
+            
+            # 測試 JWT 裝飾器導入
+            from jwt_auth_middleware import token_required, admin_required, role_required
+            self.log_test("JWT 裝飾器導入", True, "")
             
             # 測試 JWT 工具函數導入
-            from core.jwt_utils import token_required
-            self.log_test("JWT 裝飾器導入", True, "")
+            from jwt_auth_middleware import create_access_token, verify_access_token, revoke_token
+            self.log_test("JWT 工具函數導入", True, "")
             
         except Exception as e:
             self.log_test("JWT 功能測試", False, f"JWT 功能測試失敗: {str(e)}")

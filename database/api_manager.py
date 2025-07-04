@@ -1,7 +1,7 @@
 import requests
 import logging
 from typing import Dict, List, Optional, Any
-from core.config import API_BASE_URL, API_KEY
+from database.config import API_BASE_URL, API_KEY
 
 logger = logging.getLogger(__name__)
 
