@@ -30,6 +30,18 @@ def register():
         if len(password) < 6:
             return jsonify({"msg": "Password must be at least 6 characters long"}), 400
         
+        # 檢查 email 是否已存在
+        existing_user = user_model.get_user_by_email(email)
+        if existing_user:
+            return jsonify({"msg": "Email already exists"}), 400
+        
+        # 檢查 username 是否已存在（如果提供）
+        if username:
+            # 使用 API 直接檢查 username 重複
+            username_check = user_model.api.get_user_by_username(username)
+            if username_check.get("success") and username_check.get("data"):
+                return jsonify({"msg": "Username already exists"}), 400
+        
         # 註冊使用者
         user_id = user_model.register_user(email, password, username)
         
@@ -40,10 +52,11 @@ def register():
             return jsonify({
                 "message": "User registered successfully",
                 "user_id": user_id,
-                "email": email
+                "email": email,
+                "username": username or email.split("@")[0]
             }), 201
         else:
-            return jsonify({"msg": "Email already exists or registration failed"}), 400
+            return jsonify({"msg": "Registration failed"}), 400
             
     except Exception as e:
         print(f"❌ 註冊功能發生錯誤: {str(e)}")

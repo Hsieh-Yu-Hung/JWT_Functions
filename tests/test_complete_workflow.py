@@ -478,13 +478,37 @@ class CompleteWorkflowTester:
             "username": self.test_user["username"],
             "role": self.test_user["role"]
         }
+
+        print("duplicate_user", duplicate_user)
         
         try:
-            response = self.make_request("POST", "/register", duplicate_user)
-            if "already exists" in response.get("message", "").lower() or "already registered" in response.get("message", "").lower():
-                self.log_test("重複註冊處理", True, "重複註冊正確被拒絕")
+            response = self.make_request("POST", "/register", duplicate_user, allow_errors=True)
+            print("response", response)
+            
+            # 檢查是否為錯誤回應
+            if response.get("error"):
+                # 這是錯誤回應，檢查錯誤訊息
+                json_response = response.get("json_response", {})
+                if isinstance(json_response, dict):
+                    error_msg = json_response.get("msg", "")
+                else:
+                    error_msg = str(json_response)
+                
+                print(f"錯誤訊息: {error_msg}")
+                
+                if "already exists" in error_msg.lower():
+                    self.log_test("重複註冊處理", True, f"重複註冊正確被拒絕: {error_msg}")
+                else:
+                    self.log_test("重複註冊處理", False, f"重複註冊處理異常: {error_msg}")
             else:
-                self.log_test("重複註冊處理", False, f"重複註冊處理異常: {response.get('message')}")
+                # 這是正常回應，檢查 msg 欄位
+                msg = response.get("msg", "")
+                print(f"正常回應 msg: {msg}")
+                
+                if "already exists" in msg.lower():
+                    self.log_test("重複註冊處理", True, f"重複註冊正確被拒絕: {msg}")
+                else:
+                    self.log_test("重複註冊處理", False, f"重複註冊處理異常: {msg}")
         except Exception as e:
             self.log_test("重複註冊處理", False, f"重複註冊處理異常: {str(e)}")
     
