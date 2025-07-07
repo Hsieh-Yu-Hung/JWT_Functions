@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from jwt_auth_middleware import JWTConfig, set_jwt_config, token_required, revoke_token
+from jwt_auth_middleware import JWTConfig, set_jwt_config, token_required, revoke_token, admin_required
 from routes.auth_routes import auth_bp
 from database.api_manager import api_manager
 import json
@@ -103,7 +103,7 @@ def health():
         }), 500
 
 @app.route('/admin/stats')
-@token_required
+@admin_required
 def admin_stats(current_user):
     """管理員統計資訊端點"""
     # 檢查是否為管理員
@@ -128,7 +128,7 @@ def admin_stats(current_user):
 
 # 新增 JWT 相關的管理端點
 @app.route('/admin/jwt/blacklist', methods=['GET'])
-@token_required
+@admin_required
 def get_blacklist(current_user):
     """獲取黑名單統計"""
     if 'admin' not in current_user.get('roles', []):
@@ -144,7 +144,7 @@ def get_blacklist(current_user):
         return jsonify({"error": str(e)}), 500
 
 @app.route('/admin/jwt/blacklist', methods=['POST'])
-@token_required
+@admin_required
 def add_to_blacklist(current_user):
     """手動添加 token 到黑名單"""
     if 'admin' not in current_user.get('roles', []):
@@ -162,7 +162,7 @@ def add_to_blacklist(current_user):
         return jsonify({"error": str(e)}), 500
 
 @app.route('/admin/jwt/cleanup', methods=['POST'])
-@token_required
+@admin_required
 def cleanup_expired_tokens(current_user):
     """清理過期的 token"""
     if 'admin' not in current_user.get('roles', []):
