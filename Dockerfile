@@ -18,6 +18,11 @@ EXPOSE 9000
 # 設定環境變數
 ENV PYTHONPATH=/app
 ENV FLASK_APP=app.py
+ENV PYTHONUNBUFFERED=1
 
-# 啟動
-CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"] 
+# 設定執行權限
+RUN chmod +x /app/index.py
+RUN chmod +x /app/app.py
+
+# 啟動命令 - 使用 gunicorn 啟動 Flask 應用
+CMD ["gunicorn", "--bind", "0.0.0.0:9000", "--workers", "1", "--timeout", "300", "--preload", "app:app"] 

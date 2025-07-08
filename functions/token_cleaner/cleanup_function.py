@@ -18,11 +18,20 @@ except ImportError:
 
 # 導入 jwt_auth_middleware 套件
 try:
+    # 嘗試從專案根目錄匯入
+    import sys
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+    
     from jwt_auth_middleware import (
-        cleanup_expired_blacklist_tokens,
-        get_blacklist_statistics,
         JWTConfig,
         set_jwt_config
+    )
+    # 使用本地的業務邏輯函數
+    from jwt_utils import (
+        cleanup_expired_blacklist_tokens,
+        get_blacklist_statistics
     )
     JWT_MIDDLEWARE_AVAILABLE = True
 except ImportError:

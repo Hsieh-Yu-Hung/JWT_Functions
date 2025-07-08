@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
-from jwt_auth_middleware import verify_access_token, create_access_token, revoke_token
+from jwt_auth_middleware import verify_access_token
+from utils.jwt_utils import create_access_token, revoke_token
 from database.user_role_mapping_model import UserRoleMappingModel
 from database.user_model import UserModel
 

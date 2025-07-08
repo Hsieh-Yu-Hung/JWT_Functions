@@ -55,8 +55,19 @@ class FunctionComputeDeployer:
         
         if result.stdout:
             print(f"📤 輸出: {result.stdout}")
+        
+        # 對於 Docker 命令，stderr 可能包含資訊訊息，不是真正的錯誤
         if result.stderr:
-            print(f"⚠️  錯誤: {result.stderr}")
+            # 檢查是否為 Docker 建置命令
+            if 'docker build' in command:
+                # 對於 Docker build，只有在 returncode 不為 0 時才顯示為錯誤
+                if result.returncode != 0:
+                    print(f"⚠️  錯誤: {result.stderr}")
+                else:
+                    # 如果建置成功，stderr 內容可能是資訊訊息
+                    print(f"📋 Docker 建置資訊: {result.stderr}")
+            else:
+                print(f"⚠️  錯誤: {result.stderr}")
         
         if check and result.returncode != 0:
             print(f"❌ 命令執行失敗: {command}")
@@ -120,7 +131,6 @@ class FunctionComputeDeployer:
         print("🔨 建構 Docker 映像檔...")
         image_name = self.config['acr']['imageName']
         image_version = self.config['acr']['imageVersion']
-        
         build_cmd = f"docker build -t {image_name}:{image_version} ."
         self._run_command(build_cmd)
         print("✅ Docker 映像檔建構成功")

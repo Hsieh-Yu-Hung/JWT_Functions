@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 JWT Token 清理 Flask 應用
 
@@ -73,11 +72,12 @@ def cleanup_route():
 @app.route('/health', methods=['GET'])
 def health_check():
     """健康檢查端點"""
+    print("🔍 健康檢查端點")
     try:
         # 檢查套件可用性
         package_status = "unknown"
         try:
-            from jwt_auth_middleware import cleanup_expired_blacklist_tokens
+            from jwt_utils import cleanup_expired_blacklist_tokens
             package_status = "available"
         except ImportError:
             package_status = "unavailable"
@@ -126,6 +126,6 @@ def info():
     }), 200
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 9000))
+    port = int(os.environ.get('PORT', 8080))
     logger.info(f"🚀 啟動 JWT Token Cleaner 服務，端口: {port}")
     app.run(host='0.0.0.0', port=port, debug=False) 

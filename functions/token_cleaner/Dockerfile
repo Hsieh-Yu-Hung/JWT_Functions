@@ -30,11 +30,11 @@ RUN useradd --create-home --shell /bin/bash app \
 USER app
 
 # 暴露端口（Function Compute 會自動處理）
-EXPOSE 9000
+EXPOSE 8080
 
 # 健康檢查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:9000/health || exit 1
+    CMD curl -f http://localhost:8080/health || exit 1
 
 # 設定啟動命令
 CMD ["python", "app.py"] 

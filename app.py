@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-from jwt_auth_middleware import JWTConfig, set_jwt_config, token_required, revoke_token, admin_required
+from jwt_auth_middleware import JWTConfig, set_jwt_config, token_required, admin_required
+from utils.jwt_utils import revoke_token
 from routes.auth_routes import auth_bp
 from database.api_manager import api_manager
 import json

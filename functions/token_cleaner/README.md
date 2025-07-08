@@ -1,7 +1,7 @@
 # JWT Token Cleaner
 
 JWT Token 清理 Function，專為阿里雲 Function Compute 環境設計的獨立清理服務。
-**現在使用 jwt_auth_middleware 套件，提供更強大的清理功能和統計資訊。**
+**現在使用 jwt_auth_middleware 套件，提供更強大的清理功能和統計資訊。.**
 
 ## 🎯 功能特色
 
@@ -18,7 +18,7 @@ JWT Token 清理 Function，專為阿里雲 Function Compute 環境設計的獨�
 ## 📁 目錄結構
 
 ```
-utils/token_cleaner/
+functions/token_cleaner/
 ├── __init__.py              # 模組初始化
 ├── cleanup_function.py      # 主要清理邏輯（使用套件）
 ├── app.py                   # Flask 應用（HTTP 服務）
@@ -138,24 +138,24 @@ DB_NAME="your-db-name"
 
 ```bash
 # 使用 Shell 腳本（推薦）
-./utils/token_cleaner/deploy_container.sh
+./functions/token_cleaner/deploy_container.sh
 
 # 自訂執行頻率
-./utils/token_cleaner/deploy_container.sh --cron "0 0 0 * * *"  # 每天午夜執行
-./utils/token_cleaner/deploy_container.sh --cron "0 */30 * * * *"  # 每30分鐘執行
+./functions/token_cleaner/deploy_container.sh --cron "0 0 0 * * *"  # 每天午夜執行
+./functions/token_cleaner/deploy_container.sh --cron "0 */30 * * * *"  # 每30分鐘執行
 
 # 跳過 Docker 建構（僅更新 Function）
-./utils/token_cleaner/deploy_container.sh --skip-build
+./functions/token_cleaner/deploy_container.sh --skip-build
 
 # 查看幫助
-./utils/token_cleaner/deploy_container.sh --help
+./functions/token_cleaner/deploy_container.sh --help
 ```
 
 #### 方式二：本地測試
 
 ```bash
 # 執行本地測試
-python utils/token_cleaner/test_cleanup.py
+python functions/token_cleaner/test_cleanup.py
 ```
 
 ### 4. 驗證部署
@@ -262,14 +262,14 @@ python utils/token_cleaner/test_cleanup.py
 ### 本地測試
 
 ```bash
-cd utils/token_cleaner
+cd functions/token_cleaner
 python test_cleanup.py
 ```
 
 ### 直接執行清理功能
 
 ```bash
-cd utils/token_cleaner
+cd functions/token_cleaner
 python cleanup_function.py
 ```
 
@@ -309,7 +309,7 @@ aliyun fc invoke-function \
 
 ```bash
 # 重新部署（會自動更新）
-./utils/token_cleaner/deploy_container.sh
+./functions/token_cleaner/deploy_container.sh
 ```
 
 ## 🔍 故障排除
@@ -402,7 +402,7 @@ docker pull crpi-hfqxuov7ff0bdkpc.cn-shanghai.personal.cr.aliyuncs.com/accuin-bi
 ## 檔案結構
 
 ```
-utils/token_cleaner/
+functions/token_cleaner/
 ├── deploy_container.sh    # 主要部署腳本
 ├── fc-config.json        # Function Compute 配置檔案
 ├── cleanup_function.py   # 清理函數實作

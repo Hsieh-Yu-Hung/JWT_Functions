@@ -253,7 +253,7 @@ cd JWT_Functions
 # 取得各個 utils Function 的 .env.local 檔案
 # 放在各個 utils Function 目錄底下
 
-# 例如：utils/token_cleaner/.env.local
+# 例如：functions/token_cleaner/.env.local
 # 請聯繫專案管理員取得對應的 .env.local 檔案
 ```
 
@@ -265,7 +265,7 @@ cd JWT_Functions
 
 各個 utils Function 的安裝與啟動請參考各個 utils Function 的 README：
 
-- **token_cleaner**: 請參考 `utils/token_cleaner/README.md`
+- **token_cleaner**: 請參考 `functions/token_cleaner/README.md`
 
 ## 🛠️安裝與啟動
 
@@ -642,11 +642,11 @@ ALIBABA_CLOUD_REGION="cn-shanghai"
 
 ```bash
 # 使用 Shell 腳本（推薦）
-./utils/token_cleaner/deploy_container.sh
+./functions/token_cleaner/deploy_container.sh
 
 # 自訂執行頻率
-./utils/token_cleaner/deploy_container.sh --cron "0 0 0 * * *"  # 每天午夜執行
-./utils/token_cleaner/deploy_container.sh --cron "0 */30 * * * *"  # 每30分鐘執行
+./functions/token_cleaner/deploy_container.sh --cron "0 0 0 * * *"  # 每天午夜執行
+./functions/token_cleaner/deploy_container.sh --cron "0 */30 * * * *"  # 每30分鐘執行
 ```
 
 ```
@@ -684,12 +684,12 @@ aliyun fc invoke-function \
   --function-name cleanup
 
 # 重新部署
-./utils/token_cleaner/deploy_container.sh
+./functions/token_cleaner/deploy_container.sh
 ```
 
 ### 詳細文件
 
-更多詳細資訊請參考：[utils/token_cleaner/README.md](utils/token_cleaner/README.md)
+更多詳細資訊請參考：[functions/token_cleaner/README.md](functions/token_cleaner/README.md)
 
 ## 🔧 配置選項
 
@@ -867,7 +867,7 @@ app.py
 ## 📊 監控與維護
 
 - 手動 token 清理端點 (`/admin/jwt/cleanup`)
-- 獨立的 token 清理 Function (`utils/token_cleaner/`)
+- 獨立的 token 清理 Function (`functions/token_cleaner/`)
 - 資料庫連接狀態監控
 - 完整的統計資訊端點
 - 管理員功能支援

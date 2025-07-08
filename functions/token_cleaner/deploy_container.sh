@@ -156,6 +156,8 @@ login_acr() {
 # 建構 Docker 映像檔
 build_image() {
     log_info "建構 Docker 映像檔..."
+
+    echo "執行 docker build -t "$IMAGE_NAME:$IMAGE_VERSION" ."
     
     docker build -t "$IMAGE_NAME:$IMAGE_VERSION" .
     

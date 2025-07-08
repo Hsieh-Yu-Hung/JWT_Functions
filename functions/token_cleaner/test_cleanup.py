@@ -34,7 +34,7 @@ def check_environment():
     
     # 檢查套件可用性
     try:
-        from jwt_auth_middleware import cleanup_expired_blacklist_tokens, get_blacklist_statistics
+        from jwt_utils import cleanup_expired_blacklist_tokens, get_blacklist_statistics
         print("✅ jwt_auth_middleware 套件可用")
         return True
     except ImportError as e:
